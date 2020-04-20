@@ -1,12 +1,13 @@
 export const gameSettings = {
-  screenWidth: 1400,
-  screenHeight: 1000,
+  fieldWidth: 1920,
+  fieldHeight: 1080,
+  gameCameraZoom: 2,
   worldBoundEdgeSize: 32,
 }
 
 export const settingsHelpers = {
-  screenWidthMid: gameSettings.screenWidth / 2,
-  screenHeightMid: gameSettings.screenHeight / 2,
-  worldBoundWidth: gameSettings.screenWidth + 2 * gameSettings.worldBoundEdgeSize,
-  worldBoundHeight: gameSettings.screenHeight + 2 * gameSettings.worldBoundEdgeSize,
+  fieldWidthMid: gameSettings.fieldWidth / 2,
+  fieldHeightMid: gameSettings.fieldHeight / 2,
+  worldBoundWidth: gameSettings.fieldWidth + 2 * gameSettings.worldBoundEdgeSize,
+  worldBoundHeight: gameSettings.fieldHeight + 2 * gameSettings.worldBoundEdgeSize,
 }
