@@ -13,7 +13,10 @@ export const controls: {
 function preload(this: Phaser.Scene) {
   this.load.image('background', 'images/background.png')
   this.load.image('title', 'images/title-screen.png')
-  this.load.image('test', 'images/blue-guy.png')
+  this.load.image('goal', 'images/goal.png')
+  this.load.image('test', 'images/ball.png')
+
+  this.load.json('goal', 'images/goal.json')
 }
 
 /** Create all the physics groups we need and setup colliders between the ones we want to interact. */

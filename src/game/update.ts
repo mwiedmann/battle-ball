@@ -4,7 +4,7 @@ import { gameSettings, settingsHelpers } from './consts'
 export type IGameState = 'title' | 'game'
 export let gameState = 'title'
 
-let testObject: Phaser.Physics.Matter.Image
+let testObjects: Phaser.Physics.Matter.Image[] = []
 let mapCamera: Phaser.Cameras.Scene2D.Camera
 
 export function update(this: Phaser.Scene, time: number, delta: number) {
@@ -16,14 +16,37 @@ export function update(this: Phaser.Scene, time: number, delta: number) {
     gameState = 'game'
     titleScreen.destroy()
 
-    testObject = this.matter.add.image(100, 100, 'test')
-    testObject.setFriction(0, 0.01, 0)
-    testObject.setBounce(0)
-    testObject.setVelocity(20, 14)
+    const goalShape = this.cache.json.get('goal')
+    const goal = this.matter.add.image(300, settingsHelpers.fieldHeightMid, 'goal', undefined, {
+      shape: goalShape.goal,
+      isStatic: true,
+    } as any)
+
+    for (let i = 0; i < 100; i++) {
+      let testObject = this.matter.add.image(
+        Phaser.Math.RND.between(50, gameSettings.fieldWidth - 50),
+        Phaser.Math.RND.between(50, gameSettings.fieldHeight - 50),
+        'test'
+      )
+      testObject.setCircle(16)
+      testObject.setFriction(0.01, 0.01, 0.01)
+      testObject.setBounce(0.8)
+
+      testObjects.push(testObject)
+    }
+
+    spacebar.on('down', () => {
+      console.log('down')
+      testObjects.forEach((t) =>
+        t.applyForce(
+          new Phaser.Math.Vector2(Phaser.Math.RND.between(-100, 100) / 5000, Phaser.Math.RND.between(-100, 100) / 5000)
+        )
+      )
+    })
 
     this.cameras.main.setZoom(gameSettings.gameCameraZoom)
     this.cameras.main.setDeadzone(200, 200)
-    this.cameras.main.startFollow(testObject)
+    this.cameras.main.startFollow(goal)
     this.cameras.main.setLerp(0.1, 0.1)
 
     mapCamera = this.cameras.add(0, 0, settingsHelpers.mapCameraWidth, settingsHelpers.mapCameraHeight)
