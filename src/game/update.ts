@@ -4,7 +4,7 @@ import { gameSettings, settingsHelpers } from './consts'
 export type IGameState = 'title' | 'game'
 export let gameState = 'title'
 
-let testObject: Phaser.Physics.Arcade.Image
+let testObject: Phaser.Physics.Matter.Image
 let mapCamera: Phaser.Cameras.Scene2D.Camera
 
 export function update(this: Phaser.Scene, time: number, delta: number) {
@@ -16,10 +16,10 @@ export function update(this: Phaser.Scene, time: number, delta: number) {
     gameState = 'game'
     titleScreen.destroy()
 
-    testObject = this.physics.add.image(100, 100, 'test')
-    testObject.setCollideWorldBounds(true)
-    testObject.setBounce(1, 1)
-    testObject.setVelocity(400, 300)
+    testObject = this.matter.add.image(100, 100, 'test')
+    testObject.setFriction(0, 0.01, 0)
+    testObject.setBounce(0)
+    testObject.setVelocity(20, 14)
 
     this.cameras.main.setZoom(gameSettings.gameCameraZoom)
     this.cameras.main.setDeadzone(200, 200)

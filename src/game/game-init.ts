@@ -13,7 +13,7 @@ export const controls: {
 function preload(this: Phaser.Scene) {
   this.load.image('background', 'images/background.png')
   this.load.image('title', 'images/title-screen.png')
-  this.load.image('test', 'images/test-image.png')
+  this.load.image('test', 'images/blue-guy.png')
 }
 
 /** Create all the physics groups we need and setup colliders between the ones we want to interact. */
@@ -24,8 +24,7 @@ function create(this: Phaser.Scene) {
   this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'background')
 
   titleScreen = this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'title')
-  this.physics.world.setBounds(0, 0, settingsHelpers.worldBoundWidth, settingsHelpers.worldBoundHeight)
-  this.physics.world.setBoundsCollision(true, true, true, true)
+  this.matter.world.setBounds(0, 0, settingsHelpers.worldBoundWidth, settingsHelpers.worldBoundHeight)
 }
 
 export const startGame = () => {
@@ -38,9 +37,17 @@ export const startGame = () => {
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     physics: {
-      default: 'arcade',
-      arcade: {
-        debug: false,
+      default: 'matter',
+      matter: {
+        enableSleeping: true,
+        gravity: {
+          y: 0,
+          x: 0,
+        },
+        debug: {
+          showBody: true,
+          showStaticBody: true,
+        },
       },
     },
     scene: {
