@@ -4,7 +4,7 @@ import { update } from './update'
 
 export let titleScreen: Phaser.GameObjects.Image
 
-export const controls: {
+export let controls: {
   cursors?: Phaser.Types.Input.Keyboard.CursorKeys
   spacebar?: Phaser.Input.Keyboard.Key
 } = {}
@@ -14,8 +14,10 @@ function preload(this: Phaser.Scene) {
   this.load.image('background', 'images/background.png')
   this.load.image('title', 'images/title-screen.png')
   this.load.image('goal', 'images/goal.png')
-  this.load.image('test', 'images/ball.png')
+  this.load.image('ball', 'images/ball.png')
+  this.load.image('guy1', 'images/blue-guy.png')
 
+  // Load json for special shapes
   this.load.json('goal', 'images/goal.json')
 }
 
@@ -23,7 +25,6 @@ function preload(this: Phaser.Scene) {
 function create(this: Phaser.Scene) {
   controls.cursors = this.input.keyboard.createCursorKeys()
   controls.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-
   this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'background')
 
   titleScreen = this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'title')
@@ -46,10 +47,6 @@ export const startGame = () => {
         gravity: {
           y: 0,
           x: 0,
-        },
-        debug: {
-          showBody: true,
-          showStaticBody: true,
         },
       },
     },
