@@ -5,9 +5,15 @@ import { update } from './update'
 export let titleScreen: Phaser.GameObjects.Image
 
 export let controls: {
-  cursors?: Phaser.Types.Input.Keyboard.CursorKeys
-  spacebar?: Phaser.Input.Keyboard.Key
-} = {}
+  cursors: Phaser.Types.Input.Keyboard.CursorKeys
+  spacebar: Phaser.Input.Keyboard.Key
+  retrieveBall: Phaser.Input.Keyboard.Key
+  p2Up: Phaser.Input.Keyboard.Key
+  p2Down: Phaser.Input.Keyboard.Key
+  p2Left: Phaser.Input.Keyboard.Key
+  p2Right: Phaser.Input.Keyboard.Key
+  p2Shoot: Phaser.Input.Keyboard.Key
+}
 
 /** Load all the images we need and assign them names */
 function preload(this: Phaser.Scene) {
@@ -15,7 +21,8 @@ function preload(this: Phaser.Scene) {
   this.load.image('title', 'images/title-screen.png')
   this.load.image('goal', 'images/goal.png')
   this.load.image('ball', 'images/ball.png')
-  this.load.image('guy1', 'images/blue-guy.png')
+  this.load.image('home-player', 'images/blue-guy.png')
+  this.load.image('away-player', 'images/red-guy.png')
 
   // Load json for special shapes
   this.load.json('goal', 'images/goal.json')
@@ -23,8 +30,17 @@ function preload(this: Phaser.Scene) {
 
 /** Create all the physics groups we need and setup colliders between the ones we want to interact. */
 function create(this: Phaser.Scene) {
-  controls.cursors = this.input.keyboard.createCursorKeys()
-  controls.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+  controls = {
+    cursors: this.input.keyboard.createCursorKeys(),
+    spacebar: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+    retrieveBall: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+    p2Up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+    p2Down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+    p2Left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+    p2Right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    p2Shoot: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
+  }
+
   this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'background')
 
   titleScreen = this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'title')
@@ -48,6 +64,7 @@ export const startGame = () => {
           y: 0,
           x: 0,
         },
+        debug: {},
       },
     },
     scene: {
