@@ -8,17 +8,25 @@ import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
 const circleRadius = 32
 
 export const createGuy = (scene: Phaser.Scene, team: ITeam) => {
-  const guy = new Guy(scene.matter.world, 0, 0, `${team}-player`, team, undefined, {
-    circleRadius,
-    friction: 0.03,
-    frictionAir: 0.03,
-    frictionStatic: 0,
-    density: 0.065,
-    collisionFilter: {
-      mask: FieldPlayerCollisionMask,
-      category: team === 'home' ? CollisionCategory.HomeTeam : CollisionCategory.AwayTeam,
-    },
-  })
+  const guy = new Guy(
+    scene.matter.world,
+    settingsHelpers.fieldWidthMid + (team === 'home' ? -200 : 200),
+    settingsHelpers.fieldHeightMid,
+    `${team}-player`,
+    team,
+    undefined,
+    {
+      circleRadius,
+      friction: 0.03,
+      frictionAir: 0.03,
+      frictionStatic: 0,
+      density: 0.065,
+      collisionFilter: {
+        mask: FieldPlayerCollisionMask,
+        category: team === 'home' ? CollisionCategory.HomeTeam : CollisionCategory.AwayTeam,
+      },
+    }
+  )
 
   guy.startingPosition()
 
@@ -40,7 +48,13 @@ export class Guy extends Phaser.Physics.Matter.Image {
     options?: Phaser.Types.Physics.Matter.MatterBodyConfig
   ) {
     super(world, x, y, texture, frame, options)
+
+    this.startX = x
+    this.startY = y
   }
+
+  startX: number
+  startY: number
 
   ball?: Ball
   canGrabBallNext?: number
@@ -53,10 +67,7 @@ export class Guy extends Phaser.Physics.Matter.Image {
   }
 
   startingPosition() {
-    this.setPosition(
-      settingsHelpers.fieldWidthMid + (this.team === 'home' ? -200 : 200),
-      settingsHelpers.fieldHeightMid
-    )
+    this.setPosition(this.startX, this.startY)
     this.setVelocity(0, 0)
     this.setAwake()
 
@@ -64,6 +75,15 @@ export class Guy extends Phaser.Physics.Matter.Image {
       this.canGrabBallNext = undefined
       this.setCollidesWith(this.lastMask)
     }
+  }
+
+  moveToStartingPosition() {
+    this.applyForce(
+      new Phaser.Math.Vector2(this.startX, this.startY)
+        .subtract(new Phaser.Math.Vector2(this.x, this.y))
+        .normalize()
+        .scale(0.25)
+    )
   }
 
   shoot() {
