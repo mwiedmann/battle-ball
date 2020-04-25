@@ -8,7 +8,7 @@ import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
 const circleRadius = 32
 
 export const createGuy = (scene: Phaser.Scene, team: ITeam) => {
-  const guy = new Guy(scene.matter.world, 700, settingsHelpers.fieldHeightMid, `${team}-player`, team, undefined, {
+  const guy = new Guy(scene.matter.world, 0, 0, `${team}-player`, team, undefined, {
     circleRadius,
     friction: 0.03,
     frictionAir: 0.03,
@@ -19,6 +19,8 @@ export const createGuy = (scene: Phaser.Scene, team: ITeam) => {
       category: team === 'home' ? CollisionCategory.HomeTeam : CollisionCategory.AwayTeam,
     },
   })
+
+  guy.startingPosition()
 
   guy.setBounce(1)
 
@@ -48,6 +50,20 @@ export class Guy extends Phaser.Physics.Matter.Image {
   grabBall(ball: Ball) {
     ball.grabbed()
     this.ball = ball
+  }
+
+  startingPosition() {
+    this.setPosition(
+      settingsHelpers.fieldWidthMid + (this.team === 'home' ? -200 : 200),
+      settingsHelpers.fieldHeightMid
+    )
+    this.setVelocity(0, 0)
+    this.setAwake()
+
+    if (this.canGrabBallNext) {
+      this.canGrabBallNext = undefined
+      this.setCollidesWith(this.lastMask)
+    }
   }
 
   shoot() {

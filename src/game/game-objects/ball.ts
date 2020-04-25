@@ -6,18 +6,25 @@ import { BallCollisionMask, CollisionCategory } from '../types/collision'
 const circleRadius = 8
 
 export const createBall = (scene: Phaser.Scene) => {
-  const ball = new Ball(scene.matter.world, 600, settingsHelpers.fieldHeightMid, 'ball', undefined, {
-    circleRadius,
-    friction: 0.005,
-    frictionAir: 0.005,
-    frictionStatic: 0.01,
-    density: 0.1,
-    restitution: 0.7,
-    collisionFilter: {
-      mask: BallCollisionMask,
-      category: CollisionCategory.Ball,
-    },
-  })
+  const ball = new Ball(
+    scene.matter.world,
+    settingsHelpers.fieldWidthMid,
+    settingsHelpers.fieldHeightMid,
+    'ball',
+    undefined,
+    {
+      circleRadius,
+      friction: 0.005,
+      frictionAir: 0.005,
+      frictionStatic: 0.01,
+      density: 0.1,
+      restitution: 0.7,
+      collisionFilter: {
+        mask: BallCollisionMask,
+        category: CollisionCategory.Ball,
+      },
+    }
+  )
 
   scene.add.existing(ball)
 
@@ -43,6 +50,12 @@ export class Ball extends Phaser.Physics.Matter.Image {
     }
   }
 
+  startingPosition() {
+    this.setVelocity(0, 0)
+    this.setPosition(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid)
+    this.setAwake()
+  }
+
   grabbed() {
     this.setCollidesWith(0)
   }
@@ -54,7 +67,7 @@ export class Ball extends Phaser.Physics.Matter.Image {
   }
 
   shootAtTarget(target: Phaser.Types.Math.Vector2Like) {
-    const shootVector = new Phaser.Math.Vector2(target).subtract(new Phaser.Math.Vector2(state.ball)).normalize()
+    const shootVector = new Phaser.Math.Vector2(target).subtract(new Phaser.Math.Vector2(this)).normalize()
 
     this.dropped(shootVector, 0)
     this.setVelocity(0, 0)
