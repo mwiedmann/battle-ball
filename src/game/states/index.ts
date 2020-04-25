@@ -9,6 +9,13 @@ export interface IState {
   homeTeam: Guy[]
   awayTeam: Guy[]
 
+  homeScore: number
+  homeText?: Phaser.GameObjects.Text
+  homeScoreImage?: Phaser.GameObjects.Image
+  awayScore: number
+  awayText?: Phaser.GameObjects.Text
+  awayScoreImage?: Phaser.GameObjects.Image
+
   // This will be refactored to support more players but its fine for now
   player1?: Guy
   player2?: Guy
@@ -25,6 +32,8 @@ export interface IState {
 
 export const state: IState = {
   gameState: 'title',
+  homeScore: 0,
+  awayScore: 0,
   homeTeam: [],
   awayTeam: [],
   goalScoredTransitionTime: 0,
