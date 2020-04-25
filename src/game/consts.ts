@@ -3,7 +3,7 @@ export const gameSettings = {
   screenHeight: 1080,
   fieldWidth: 1920,
   fieldHeight: 1080,
-  gameCameraZoom: 1.5,
+  gameCameraZoom: 1.2,
   mapCameraZoom: 0.16,
   worldBoundEdgeSize: 32,
 }

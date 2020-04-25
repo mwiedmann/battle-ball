@@ -1,10 +1,9 @@
 import { settingsHelpers } from '../consts'
 import { state } from '../states'
 import { controls } from '../game-init'
-import { CollisionCategory, BallCollisionMask } from '../types/collision'
+import { BallCollisionMask, CollisionCategory } from '../types/collision'
 
 const circleRadius = 8
-const dropBuffer = 4
 
 export const createBall = (scene: Phaser.Scene) => {
   const ball = new Ball(scene.matter.world, 600, settingsHelpers.fieldHeightMid, 'ball', undefined, {
@@ -14,6 +13,10 @@ export const createBall = (scene: Phaser.Scene) => {
     frictionStatic: 0.01,
     density: 0.1,
     restitution: 0.7,
+    collisionFilter: {
+      mask: BallCollisionMask,
+      category: CollisionCategory.Ball,
+    },
   })
 
   scene.add.existing(ball)
@@ -36,7 +39,7 @@ export class Ball extends Phaser.Physics.Matter.Image {
   update() {
     // Restrieve the ball if not already holding it
     if (controls.retrieveBall.isDown && !state.player1?.ball) {
-      this.shootAtTarget(state.player1!, circleRadius)
+      this.shootAtTarget(state.player1!)
     }
   }
 
@@ -50,21 +53,17 @@ export class Ball extends Phaser.Physics.Matter.Image {
     this.setCollidesWith(BallCollisionMask)
   }
 
-  shootAtTarget(target: Phaser.Types.Math.Vector2Like, dropDistance: number) {
-    const fullDropDistance = dropDistance + circleRadius + dropBuffer
+  shootAtTarget(target: Phaser.Types.Math.Vector2Like) {
     const shootVector = new Phaser.Math.Vector2(target).subtract(new Phaser.Math.Vector2(state.ball)).normalize()
 
-    this.dropped(shootVector, fullDropDistance)
+    this.dropped(shootVector, 0)
     this.setVelocity(0, 0)
     this.applyForce(shootVector)
   }
 
-  shootInDirection(direction: Phaser.Math.Vector2, dropDistance: number) {
-    const fullDropDistance = dropDistance + circleRadius + dropBuffer
-    const shootVector = direction.normalize()
-
-    this.dropped(shootVector, fullDropDistance)
+  shootInDirection(direction: Phaser.Math.Vector2) {
+    this.dropped(direction, 0)
     this.setVelocity(0, 0)
-    this.applyForce(shootVector)
+    this.applyForce(direction)
   }
 }

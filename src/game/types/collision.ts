@@ -1,5 +1,5 @@
 export enum CollisionCategory {
-  All = 1,
+  Uncategorized = 1,
   Ball = 2,
   GoalRestrictedAreaHome = 4,
   GoalRestrictedAreaAway = 8,
@@ -12,7 +12,7 @@ export enum CollisionCategory {
 }
 
 export const FieldPlayerCollisionMask =
-  CollisionCategory.All |
+  CollisionCategory.Uncategorized |
   CollisionCategory.Ball |
   CollisionCategory.GoalRestrictedAreaHome |
   CollisionCategory.GoalRestrictedAreaAway |
@@ -22,7 +22,7 @@ export const FieldPlayerCollisionMask =
   CollisionCategory.AwayGoalie
 
 export const HomeGoalieCollisionMask =
-  CollisionCategory.All |
+  CollisionCategory.Uncategorized |
   CollisionCategory.Ball |
   CollisionCategory.GoalRestrictedAreaAway |
   CollisionCategory.HomeTeam |
@@ -31,7 +31,7 @@ export const HomeGoalieCollisionMask =
   CollisionCategory.AwayGoalie
 
 export const AwayGoalieCollisionMask =
-  CollisionCategory.All |
+  CollisionCategory.Uncategorized |
   CollisionCategory.Ball |
   CollisionCategory.GoalRestrictedAreaHome |
   CollisionCategory.HomeTeam |
@@ -40,7 +40,7 @@ export const AwayGoalieCollisionMask =
   CollisionCategory.AwayGoalie
 
 export const BallCollisionMask =
-  CollisionCategory.All |
+  CollisionCategory.Uncategorized |
   CollisionCategory.HomeTeam |
   CollisionCategory.AwayTeam |
   CollisionCategory.HomeGoalie |

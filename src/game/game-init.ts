@@ -6,7 +6,7 @@ export let titleScreen: Phaser.GameObjects.Image
 
 export let controls: {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys
-  spacebar: Phaser.Input.Keyboard.Key
+  pl1Shoot: Phaser.Input.Keyboard.Key
   retrieveBall: Phaser.Input.Keyboard.Key
   p2Up: Phaser.Input.Keyboard.Key
   p2Down: Phaser.Input.Keyboard.Key
@@ -32,7 +32,7 @@ function preload(this: Phaser.Scene) {
 function create(this: Phaser.Scene) {
   controls = {
     cursors: this.input.keyboard.createCursorKeys(),
-    spacebar: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+    pl1Shoot: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL),
     retrieveBall: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
     p2Up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
     p2Down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
@@ -64,7 +64,6 @@ export const startGame = () => {
           y: 0,
           x: 0,
         },
-        debug: {},
       },
     },
     scene: {
