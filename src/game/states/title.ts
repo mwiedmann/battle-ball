@@ -17,7 +17,9 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) =>
     state.player2 = createGuy(scene, 'away')
     state.awayTeam.push(state.player2)
 
-    state.goal = createGoal(scene, 'home')
+    state.homeGoal = createGoal(scene, 'home')
+    state.awayGoal = createGoal(scene, 'away')
+
     state.ball = createBall(scene)
 
     // Players can grab the ball

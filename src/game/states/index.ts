@@ -13,7 +13,9 @@ export interface IState {
   player1?: Guy
   player2?: Guy
 
-  goal?: Phaser.Physics.Matter.Image
+  homeGoal?: Phaser.Physics.Matter.Image
+  awayGoal?: Phaser.Physics.Matter.Image
+
   mapCamera?: Phaser.Cameras.Scene2D.Camera
 }
 
