@@ -26,5 +26,8 @@ const goalScored = (scene: Phaser.Scene, homeAdj: number, awayAdj: number) => {
   state.homeText!.text = state.homeScore.toString()
 
   scene.cameras.main.shake(2500, 0.0025)
-  scene.cameras.main.flash(100, awayAdj ? 255 : 0, 0, homeAdj ? 255 : 0)
+  scene.cameras.main.flash(250, awayAdj ? 255 : 0, 0, homeAdj ? 255 : 0)
+
+  state.player1 = state.homeTeam.find((p) => p.position === 'center')
+  state.player2 = state.awayTeam.find((p) => p.position === 'center')
 }

@@ -11,11 +11,21 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) =>
     state.gameState = 'game'
     titleScreen.destroy()
 
-    state.player1 = createGuy(scene, 'home')
+    state.player1 = createGuy(scene, 'home', 'center')
     state.homeTeam.push(state.player1)
+    state.homeTeam.push(createGuy(scene, 'home', 'goalie'))
+    state.homeTeam.push(createGuy(scene, 'home', 'wingLeft'))
+    state.homeTeam.push(createGuy(scene, 'home', 'wingRight'))
+    state.homeTeam.push(createGuy(scene, 'home', 'defLeft'))
+    state.homeTeam.push(createGuy(scene, 'home', 'defRight'))
 
-    state.player2 = createGuy(scene, 'away')
+    state.player2 = createGuy(scene, 'away', 'center')
     state.awayTeam.push(state.player2)
+    state.awayTeam.push(createGuy(scene, 'away', 'goalie'))
+    state.awayTeam.push(createGuy(scene, 'away', 'wingLeft'))
+    state.awayTeam.push(createGuy(scene, 'away', 'wingRight'))
+    state.awayTeam.push(createGuy(scene, 'away', 'defLeft'))
+    state.awayTeam.push(createGuy(scene, 'away', 'defRight'))
 
     state.homeGoal = createGoal(scene, 'home')
     state.awayGoal = createGoal(scene, 'away')
@@ -50,5 +60,7 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) =>
     // state.mapCamera = scene.cameras.add(0, 0, settingsHelpers.mapCameraWidth, settingsHelpers.mapCameraHeight)
     // state.mapCamera.setScroll(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid)
     // state.mapCamera.setZoom(gameSettings.mapCameraZoom)
+
+    // state.debugImage = scene.add.image(0, 0, 'x')
   }
 }

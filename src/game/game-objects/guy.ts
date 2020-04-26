@@ -4,16 +4,18 @@ import { Ball } from './ball'
 import { state } from '../states'
 import { ITeam } from '../types'
 import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
+import { IPosition, positions } from '../settings/position'
 
 const circleRadius = 32
 
-export const createGuy = (scene: Phaser.Scene, team: ITeam) => {
+export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition) => {
   const guy = new Guy(
     scene.matter.world,
-    settingsHelpers.fieldWidthMid + (team === 'home' ? -200 : 200),
-    settingsHelpers.fieldHeightMid,
+    positions[team][position].startX,
+    positions[team][position].startY,
     `${team}-player`,
     team,
+    position,
     undefined,
     {
       circleRadius,
@@ -22,8 +24,8 @@ export const createGuy = (scene: Phaser.Scene, team: ITeam) => {
       frictionStatic: 0,
       density: 0.065,
       collisionFilter: {
-        mask: FieldPlayerCollisionMask,
-        category: team === 'home' ? CollisionCategory.HomeTeam : CollisionCategory.AwayTeam,
+        mask: positions[team][position].collisionMask,
+        category: positions[team][position].collisionCategory,
       },
     }
   )
@@ -44,6 +46,7 @@ export class Guy extends Phaser.Physics.Matter.Image {
     y: number,
     texture: string,
     public team: ITeam,
+    public position: IPosition,
     frame?: string | integer,
     options?: Phaser.Types.Physics.Matter.MatterBodyConfig
   ) {
@@ -62,8 +65,17 @@ export class Guy extends Phaser.Physics.Matter.Image {
   shotPower = 1.3
 
   grabBall(ball: Ball) {
+    this.setActivePlayer()
     ball.grabbed()
     this.ball = ball
+  }
+
+  setActivePlayer() {
+    if (this.team === 'home') {
+      state.player1 = this
+    } else {
+      state.player2 = this
+    }
   }
 
   startingPosition() {
@@ -78,12 +90,18 @@ export class Guy extends Phaser.Physics.Matter.Image {
   }
 
   moveToStartingPosition() {
-    this.applyForce(
-      new Phaser.Math.Vector2(this.startX, this.startY)
-        .subtract(new Phaser.Math.Vector2(this.x, this.y))
-        .normalize()
-        .scale(0.25)
-    )
+    this.moveToPosition(this.startX, this.startY)
+  }
+
+  moveToPosition(moveToX: number, moveToY: number) {
+    if (Phaser.Math.Distance.Between(moveToX, moveToY, this.x, this.y) > 5) {
+      this.applyForce(
+        new Phaser.Math.Vector2(moveToX, moveToY)
+          .subtract(new Phaser.Math.Vector2(this.x, this.y))
+          .normalize()
+          .scale(0.25)
+      )
+    }
   }
 
   shoot() {
@@ -111,6 +129,15 @@ export class Guy extends Phaser.Physics.Matter.Image {
 
     this.ball.shootInDirection(finalShotVector)
     this.ball = undefined
+
+    // If this is the goalie, swtich control to another guy
+    if (this.position === 'goalie') {
+      if (this.team === 'home') {
+        state.player1 = state.homeTeam.find((p) => p.position !== 'goalie')
+      } else {
+        state.player2 = state.awayTeam.find((p) => p.position !== 'goalie')
+      }
+    }
   }
 
   update() {
@@ -120,6 +147,11 @@ export class Guy extends Phaser.Physics.Matter.Image {
     if (this.canGrabBallNext && this.canGrabBallNext <= this.scene.time.now) {
       this.canGrabBallNext = undefined
       this.setCollidesWith(this.lastMask)
+    }
+
+    // See if this guy is ai controlled atm
+    if ((this.team === 'home' && state.player1 !== this) || (this.team === 'away' && state.player2 !== this)) {
+      return this.ai()
     }
 
     if (
@@ -156,6 +188,52 @@ export class Guy extends Phaser.Physics.Matter.Image {
 
     if (this.ball) {
       this.ball.setPosition(this.x, this.y)
+    }
+  }
+  ai() {
+    if (this.position === 'goalie') {
+      const goal = this.team === 'home' ? state.homeGoal : state.awayGoal
+
+      // As goalie, try to position between the ball and the goal
+      let guardPoint = new Phaser.Geom.Point()
+
+      const hasGuardSpot = Phaser.Geom.Intersects.LineToLine(
+        new Phaser.Geom.Line(state.ball?.x, state.ball?.y, goal?.x, goal?.y),
+        new Phaser.Geom.Line(this.startX, this.startY - 200, this.startX, this.startY + 200),
+        guardPoint
+      )
+
+      // if (this.team === 'away') {
+      //   state.debugImage?.setPosition(guardPoint.x, guardPoint.y)
+      // }
+
+      if (hasGuardSpot) {
+        this.moveToPosition(guardPoint.x, guardPoint.y)
+      } else {
+        // If here, then the ball is behind the goalie's defense line.
+        // Just move towards the ball (but not farther than the midpoint)
+        const midPoint = Phaser.Geom.Line.GetMidPoint(
+          new Phaser.Geom.Line(this.startX, this.startY, state.ball?.x, state.ball?.y)
+        )
+
+        this.moveToPosition(midPoint.x, midPoint.y)
+
+        // Bleh, just attack the ball if here
+        // this.moveToPosition(state.ball!.x, state.ball!.y)
+      }
+    } else {
+      // If on defense (other team has ball) and the ball is 'close", just move to the ball
+      if (
+        ((state.player1?.ball && this.team === 'away') ||
+          (state.player2?.ball && this.team === 'home') ||
+          (!state.player1?.ball && !state.player2?.ball)) &&
+        Phaser.Math.Distance.Between(state.ball!.x, state.ball!.y, this.x, this.y) < 300
+      ) {
+        this.moveToPosition(state.ball!.x, state.ball!.y)
+      } else {
+        // Just move back ot the starting position for now
+        this.moveToStartingPosition()
+      }
     }
   }
 }

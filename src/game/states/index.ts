@@ -28,6 +28,8 @@ export interface IState {
   mapCamera?: Phaser.Cameras.Scene2D.Camera
 
   goalScoredTransitionTime: number
+
+  debugImage?: Phaser.GameObjects.Image
 }
 
 export const state: IState = {

@@ -25,6 +25,7 @@ export const HomeGoalieCollisionMask =
   CollisionCategory.Uncategorized |
   CollisionCategory.Ball |
   CollisionCategory.GoalRestrictedAreaAway |
+  CollisionCategory.GoalScoreAreaHome |
   CollisionCategory.HomeTeam |
   CollisionCategory.AwayTeam |
   CollisionCategory.HomeGoalie |
@@ -34,6 +35,7 @@ export const AwayGoalieCollisionMask =
   CollisionCategory.Uncategorized |
   CollisionCategory.Ball |
   CollisionCategory.GoalRestrictedAreaHome |
+  CollisionCategory.GoalScoreAreaAway |
   CollisionCategory.HomeTeam |
   CollisionCategory.AwayTeam |
   CollisionCategory.HomeGoalie |

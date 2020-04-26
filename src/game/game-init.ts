@@ -25,6 +25,7 @@ function preload(this: Phaser.Scene) {
   this.load.image('away-player', 'images/red-guy.png')
   this.load.image('home-score', 'images/home-score.png')
   this.load.image('away-score', 'images/away-score.png')
+  this.load.image('x', 'images/x.png')
 
   // Load json for special shapes
   this.load.json('goal', 'images/goal.json')
