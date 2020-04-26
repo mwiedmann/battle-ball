@@ -8,24 +8,22 @@ import { createGoal } from '../game-objects/goal'
 export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) => {
   // When spacebar pressed, close the title screen and create a player and ball for testing
   if (controls.pl1Shoot.isDown) {
-    state.gameState = 'game'
+    state.gameState = 'faceOff'
+    state.nextStateTransitionTime = scene.time.now + 3000
+
     titleScreen.destroy()
 
     state.player1 = createGuy(scene, 'home', 'center')
     state.homeTeam.push(state.player1)
     state.homeTeam.push(createGuy(scene, 'home', 'goalie'))
-    state.homeTeam.push(createGuy(scene, 'home', 'wingLeft'))
-    state.homeTeam.push(createGuy(scene, 'home', 'wingRight'))
-    state.homeTeam.push(createGuy(scene, 'home', 'defLeft'))
-    state.homeTeam.push(createGuy(scene, 'home', 'defRight'))
+    state.homeTeam.push(createGuy(scene, 'home', 'wing'))
+    state.homeTeam.push(createGuy(scene, 'home', 'defense'))
 
     state.player2 = createGuy(scene, 'away', 'center')
     state.awayTeam.push(state.player2)
     state.awayTeam.push(createGuy(scene, 'away', 'goalie'))
-    state.awayTeam.push(createGuy(scene, 'away', 'wingLeft'))
-    state.awayTeam.push(createGuy(scene, 'away', 'wingRight'))
-    state.awayTeam.push(createGuy(scene, 'away', 'defLeft'))
-    state.awayTeam.push(createGuy(scene, 'away', 'defRight'))
+    state.awayTeam.push(createGuy(scene, 'away', 'wing'))
+    state.awayTeam.push(createGuy(scene, 'away', 'defense'))
 
     state.homeGoal = createGoal(scene, 'home')
     state.awayGoal = createGoal(scene, 'away')

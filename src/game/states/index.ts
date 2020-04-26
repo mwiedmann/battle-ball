@@ -1,7 +1,7 @@
 import { Ball } from '../game-objects/ball'
 import { Guy } from '../game-objects/guy'
 
-type IGameState = 'title' | 'game' | 'goalScored'
+type IGameState = 'title' | 'faceOff' | 'game' | 'goalScored'
 
 export interface IState {
   gameState: IGameState
@@ -27,7 +27,7 @@ export interface IState {
 
   mapCamera?: Phaser.Cameras.Scene2D.Camera
 
-  goalScoredTransitionTime: number
+  nextStateTransitionTime: number
 
   debugImage?: Phaser.GameObjects.Image
 }
@@ -38,5 +38,5 @@ export const state: IState = {
   awayScore: 0,
   homeTeam: [],
   awayTeam: [],
-  goalScoredTransitionTime: 0,
+  nextStateTransitionTime: 0,
 }

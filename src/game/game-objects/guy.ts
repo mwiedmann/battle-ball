@@ -65,9 +65,12 @@ export class Guy extends Phaser.Physics.Matter.Image {
   shotPower = 1.3
 
   grabBall(ball: Ball) {
-    this.setActivePlayer()
-    ball.grabbed()
-    this.ball = ball
+    // Guy can only grab the ball during the 'game' state
+    if (state.gameState === 'game') {
+      this.setActivePlayer()
+      ball.grabbed()
+      this.ball = ball
+    }
   }
 
   setActivePlayer() {
@@ -150,9 +153,9 @@ export class Guy extends Phaser.Physics.Matter.Image {
     }
 
     // See if this guy is ai controlled atm
-    if ((this.team === 'home' && state.player1 !== this) || (this.team === 'away' && state.player2 !== this)) {
-      return this.ai()
-    }
+    // if ((this.team === 'home' && state.player1 !== this) || (this.team === 'away' && state.player2 !== this)) {
+    //   return this.ai()
+    // }
 
     if (
       (state.player1 === this && controls.cursors.left?.isDown) ||
