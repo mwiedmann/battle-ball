@@ -1,7 +1,20 @@
 import { state } from '.'
 import { Scene } from 'phaser'
+import { closestNonGoalie } from '../helpers/guy-helper'
 
 export const gameUpdate = (scene: Phaser.Scene, time: number, delta: number) => {
+  // Set the player(s) closest to the ball on each team
+  const looseBall = state.looseBall()
+  state.homeClosestToBall = undefined
+  state.awayClosestToBall = undefined
+
+  if (looseBall || state.hasBall('home')) {
+    state.awayClosestToBall = closestNonGoalie(state.awayTeam, state.ball!.x, state.ball!.y)
+  }
+  if (looseBall || state.hasBall('away')) {
+    state.homeClosestToBall = closestNonGoalie(state.homeTeam, state.ball!.x, state.ball!.y)
+  }
+
   state.homeTeam?.forEach((p) => p.update())
   state.awayTeam?.forEach((p) => p.update())
   state.ball?.update()

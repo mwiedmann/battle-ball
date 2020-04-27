@@ -7,7 +7,7 @@ import { createGoal } from '../game-objects/goal'
 
 export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) => {
   // When spacebar pressed, close the title screen and create a player and ball for testing
-  if (controls.pl1Shoot.isDown) {
+  if (controls.p1Shoot.isDown) {
     state.gameState = 'faceOff'
     state.nextStateTransitionTime = scene.time.now + 3000
 

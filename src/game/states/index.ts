@@ -10,6 +10,9 @@ export interface IState {
   homeTeam: Guy[]
   awayTeam: Guy[]
 
+  awayClosestToBall?: Guy
+  homeClosestToBall?: Guy
+
   homeScore: number
   homeText?: Phaser.GameObjects.Text
   homeScoreImage?: Phaser.GameObjects.Image
@@ -38,7 +41,7 @@ export interface IState {
   onOffense: (team: ITeam) => boolean
   onDefense: (team: ITeam) => boolean
   hasBall: (team: ITeam) => boolean
-  looseBall: (team: ITeam) => boolean
+  looseBall: () => boolean
 
   getTeammates: (guy: Guy) => Guy[]
 }
@@ -56,7 +59,7 @@ export const state: IState = {
     (team === 'home' && state.player1?.ball != undefined) || (team === 'away' && state.player2?.ball != undefined),
   onOffense: (team: ITeam) => state.hasBall(team),
   onDefense: (team: ITeam) => !state.hasBall(team),
-  looseBall: (team: ITeam) => !state.player1?.ball && !state.player2?.ball,
+  looseBall: () => !state.player1?.ball && !state.player2?.ball,
   getTeammates: (guy: Guy) =>
     guy.team === 'home' ? state.homeTeam.filter((g) => g !== guy) : state.awayTeam.filter((g) => g !== guy),
 }
