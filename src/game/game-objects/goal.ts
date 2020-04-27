@@ -6,12 +6,12 @@ import { ITeam } from '../types'
 const goalLocations = {
   home: {
     goal: { x: 245, rotation: 0 },
-    restrictedArea: { x: 303 },
+    restrictedArea: { x: 325 },
     scoringArea: { x: 265 },
   },
   away: {
     goal: { x: 1680, rotation: Phaser.Math.PI2 / 2 },
-    restrictedArea: { x: 1621 },
+    restrictedArea: { x: 1600 },
     scoringArea: { x: 1660 },
   },
 }
@@ -26,7 +26,7 @@ export const createGoal = (scene: Phaser.Scene, team: ITeam) => {
   goal.setRotation(goalLocations[team].goal.rotation)
 
   // Restricted area around goal
-  scene.matter.add.rectangle(goalLocations[team].restrictedArea.x, settingsHelpers.fieldHeightMid, 256, 384, {
+  scene.matter.add.rectangle(goalLocations[team].restrictedArea.x, settingsHelpers.fieldHeightMid, 212, 384, {
     isStatic: true,
     collisionFilter: {
       category: team === 'home' ? CollisionCategory.GoalRestrictedAreaHome : CollisionCategory.GoalRestrictedAreaAway,
