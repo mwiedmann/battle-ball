@@ -40,7 +40,7 @@ export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition)
   return guy
 }
 
-export class Guy extends Phaser.Physics.Matter.Image {
+export class Guy extends Phaser.Physics.Matter.Sprite {
   constructor(
     world: Phaser.Physics.Matter.World,
     x: number,
@@ -62,14 +62,17 @@ export class Guy extends Phaser.Physics.Matter.Image {
 
   ball?: Ball
   canGrabBallNext?: number
+  stunnedTime?: number
   lastMask = 0
   shotPower = 1.3
-  timeCaughtBall?: number
+  timeToNextActionWithBall?: number
 
   goToPositionX = 0
   goToPositionY = 0
   goToPositionDefense = true
   goToPositionTime = 0
+
+  fumbleNextUpdate = false
 
   grabBall(ball: Ball) {
     // Guy can only grab the ball during the 'game' state
@@ -78,7 +81,15 @@ export class Guy extends Phaser.Physics.Matter.Image {
       ball.grabbed()
       this.ball = ball
 
-      this.timeCaughtBall = this.scene.time.now
+      // If the goalie catches the ball, have him go up or down briefly and pass it out.
+      if (this.position === 'goalie') {
+        this.goToPositionX = this.x
+        this.goToPositionY = Phaser.Math.RND.pick([this.y - 150, this.y + 150])
+
+        this.timeToNextActionWithBall = this.scene.time.now + Phaser.Math.RND.between(500, 1000)
+      } else {
+        this.timeToNextActionWithBall = this.scene.time.now + Phaser.Math.RND.between(1000, 3000)
+      }
     }
   }
 
@@ -99,6 +110,8 @@ export class Guy extends Phaser.Physics.Matter.Image {
       this.canGrabBallNext = undefined
       this.setCollidesWith(this.lastMask)
     }
+
+    this.stunnedTime = undefined
   }
 
   moveToStartingPosition() {
@@ -115,12 +128,25 @@ export class Guy extends Phaser.Physics.Matter.Image {
       )
     }
   }
-  dropBall() {
+
+  fumbleBall() {
+    this.fumbleNextUpdate = false
+
+    if (this.ball) {
+      this.ball.shootInDirection(
+        new Phaser.Math.Vector2(Phaser.Math.RND.normal(), Phaser.Math.RND.normal()).normalize().scale(0.3)
+      )
+      this.dropBall(1000)
+      this.stunnedTime = this.scene.time.now + 1000
+    }
+  }
+
+  dropBall(grabBallTime?: number) {
     // The typings don't expose the force/veloctiy types we need
     const body = this.body as any
 
     this.lastMask = body.collisionFilter.mask
-    this.canGrabBallNext = this.scene.time.now + 500
+    this.canGrabBallNext = this.scene.time.now + (grabBallTime || 500)
     this.setCollidesWith(this.lastMask ^ CollisionCategory.Ball)
 
     this.ball = undefined
@@ -159,9 +185,9 @@ export class Guy extends Phaser.Physics.Matter.Image {
     this.dropBall()
   }
 
-  pass(left: boolean, right: boolean, up: boolean, down: boolean) {
+  pass(left: boolean, right: boolean, up: boolean, down: boolean, mustBeOpen: boolean): boolean {
     if (!this.ball) {
-      return
+      return false
     }
 
     // First, try to find a teammate in the direction the player is aiming
@@ -182,10 +208,35 @@ export class Guy extends Phaser.Physics.Matter.Image {
     }
 
     if (closestTeammate) {
-      this.ball.shootAtTarget(closestTeammate)
-    }
+      // If the teammate must be open, then make sure the other team can't block this pass
+      if (mustBeOpen) {
+        const line = new Phaser.Geom.Line(this.x, this.y, closestTeammate.x, closestTeammate.y)
+        const otherTeam = this.team === 'home' ? state.awayTeam : state.homeTeam
 
-    this.dropBall()
+        const canBlock = otherTeam.find((p) => {
+          const circle = new Phaser.Geom.Circle(p.x, p.y, circleRadius * 1.25)
+          return Phaser.Geom.Intersects.LineToCircle(line, circle)
+        })
+
+        if (!canBlock) {
+          this.ball.shootAtTarget(closestTeammate)
+          this.dropBall()
+          return true
+        } else {
+          return false
+        }
+      } else {
+        this.ball.shootAtTarget(closestTeammate)
+        this.dropBall()
+        return true
+      }
+    }
+    return false
+  }
+
+  setHighlight() {
+    // Use the highlighted player for the active guys
+    this.setFrame(state.player1 === this || state.player2 == this ? 1 : 0)
   }
 
   update() {
@@ -195,6 +246,12 @@ export class Guy extends Phaser.Physics.Matter.Image {
     let up = false
     let down = false
 
+    this.setHighlight()
+
+    if (this.fumbleNextUpdate) {
+      this.fumbleBall()
+    }
+
     // See if player can grab ball again
     if (this.canGrabBallNext && this.canGrabBallNext <= this.scene.time.now) {
       this.canGrabBallNext = undefined
@@ -203,6 +260,29 @@ export class Guy extends Phaser.Physics.Matter.Image {
 
     if (this.ball) {
       this.ball.setPosition(this.x, this.y)
+    }
+
+    // Pass or switch to player closest to the ball
+    if ((state.player1 === this && controls.p1Pass.isDown) || (state.player2 === this && controls.p2Pass.isDown)) {
+      if (this.ball) {
+        this.pass(left, right, up, down, false)
+      } else {
+        if (this.team === 'home' && state.homeClosestToBall) {
+          state.player1 = state.homeClosestToBall
+        }
+
+        if (this.team === 'away' && state.awayClosestToBall) {
+          state.player2 = state.awayClosestToBall
+        }
+      }
+    }
+
+    // Stunned player cannot move
+    if (this.stunnedTime) {
+      if (this.stunnedTime <= this.scene.time.now) {
+        this.stunnedTime = undefined
+      }
+      return
     }
 
     // See if this guy is ai controlled atm
@@ -248,17 +328,25 @@ export class Guy extends Phaser.Physics.Matter.Image {
     ) {
       this.shoot()
     }
-
-    if (
-      this.ball &&
-      ((state.player1 === this && controls.p1Pass.isDown) || (state.player2 === this && controls.p2Pass.isDown))
-    ) {
-      this.pass(left, right, up, down)
-    }
   }
+
   ai() {
+    let force = 0.2
+
     if (this.position === 'goalie') {
-      if (this.goToPositionTime <= this.scene.time.now) {
+      if (this.ball) {
+        // The AI will throw the ball to a teammate after a few seconds
+        if (this.timeToNextActionWithBall && this.timeToNextActionWithBall <= this.scene.time.now) {
+          if (!this.pass(false, false, false, false, true)) {
+            // Nobody open, go to next spot
+            this.goToPositionX = this.x
+            this.goToPositionY = Phaser.Math.RND.pick([this.y - 150, this.y + 150])
+
+            this.timeToNextActionWithBall = this.scene.time.now + Phaser.Math.RND.between(250, 500)
+          }
+        }
+        force = 0.3
+      } else if (this.goToPositionTime <= this.scene.time.now) {
         this.goToPositionTime = this.scene.time.now + Phaser.Math.RND.integerInRange(0, 500)
         const goal = this.team === 'home' ? state.homeGoal : state.awayGoal
 
@@ -294,13 +382,13 @@ export class Guy extends Phaser.Physics.Matter.Image {
           this.goToPositionY = Phaser.Math.RND.integerInRange(goToY - 50, goToY + 50)
         }
       }
-      this.moveToPosition(this.goToPositionX, this.goToPositionY)
+      this.moveToPosition(this.goToPositionX, this.goToPositionY, force)
     } else {
       // If this guy is closest to the ball on defense or in a loose ball situation,
       // move to the ball.
       if (
-        (this.team === 'home' && state.homeClosestToBall === this) ||
-        (this.team === 'away' && state.awayClosestToBall === this)
+        (this.team === 'home' && state.homeClosestToBall === this && !state.awayGoalie?.ball) ||
+        (this.team === 'away' && state.awayClosestToBall === this && !state.homeGoalie?.ball)
       ) {
         this.moveToPosition(state.ball!.x, state.ball!.y)
       } else {
@@ -324,30 +412,30 @@ export class Guy extends Phaser.Physics.Matter.Image {
 
         this.moveToPosition(this.goToPositionX, this.goToPositionY)
       }
-    }
 
-    // Shoot on goal if close enough
-    if (
-      this.ball &&
-      this.team === 'home' &&
-      Phaser.Math.Distance.Between(this.x, this.y, state.awayGoal!.x, state.awayGoal!.y) <= 400
-    ) {
-      this.ball.shootAtTarget(state.awayGoal!)
-      this.dropBall()
-      this.timeCaughtBall = undefined
-    } else if (
-      this.ball &&
-      this.team === 'away' &&
-      Phaser.Math.Distance.Between(this.x, this.y, state.homeGoal!.x, state.homeGoal!.y) <= 400
-    ) {
-      this.ball.shootAtTarget(state.homeGoal!)
-      this.dropBall()
-      this.timeCaughtBall = undefined
-    }
+      // Shoot on goal if close enough
+      if (
+        this.ball &&
+        this.team === 'home' &&
+        Phaser.Math.Distance.Between(this.x, this.y, state.awayGoal!.x, state.awayGoal!.y) <= 400
+      ) {
+        this.ball.shootAtTarget(state.awayGoal!)
+        this.dropBall()
+        this.timeToNextActionWithBall = undefined
+      } else if (
+        this.ball &&
+        this.team === 'away' &&
+        Phaser.Math.Distance.Between(this.x, this.y, state.homeGoal!.x, state.homeGoal!.y) <= 400
+      ) {
+        this.ball.shootAtTarget(state.homeGoal!)
+        this.dropBall()
+        this.timeToNextActionWithBall = undefined
+      }
 
-    // The AI will throw the ball to a teammate after a few seconds
-    if (this.ball && this.timeCaughtBall && this.timeCaughtBall + 2000 <= this.scene.time.now) {
-      this.pass(false, false, false, false)
+      // The AI will throw the ball to a teammate after a few seconds
+      if (this.ball && this.timeToNextActionWithBall && this.timeToNextActionWithBall <= this.scene.time.now) {
+        this.pass(false, false, false, false, false)
+      }
     }
   }
 }

@@ -24,6 +24,9 @@ export interface IState {
   player1?: Guy
   player2?: Guy
 
+  homeGoalie?: Guy
+  awayGoalie?: Guy
+
   player1AI: boolean
   player2AI: boolean
 
@@ -57,7 +60,9 @@ export const state: IState = {
   nextStateTransitionTime: 0,
   hasBall: (team: ITeam) =>
     (team === 'home' && state.player1?.ball != undefined) || (team === 'away' && state.player2?.ball != undefined),
-  onOffense: (team: ITeam) => state.hasBall(team),
+  onOffense: (team: ITeam) =>
+    ((team === 'home' && !state.homeGoalie?.ball) || (team === 'away' && !state.awayGoalie?.ball)) &&
+    state.hasBall(team),
   onDefense: (team: ITeam) => !state.hasBall(team),
   looseBall: () => !state.player1?.ball && !state.player2?.ball,
   getTeammates: (guy: Guy) =>

@@ -15,15 +15,47 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) =>
 
     state.player1 = createGuy(scene, 'home', 'center')
     state.homeTeam.push(state.player1)
-    state.homeTeam.push(createGuy(scene, 'home', 'goalie'))
+    state.homeGoalie = createGuy(scene, 'home', 'goalie')
+    state.homeTeam.push(state.homeGoalie)
     state.homeTeam.push(createGuy(scene, 'home', 'wing'))
     state.homeTeam.push(createGuy(scene, 'home', 'defense'))
 
     state.player2 = createGuy(scene, 'away', 'center')
     state.awayTeam.push(state.player2)
-    state.awayTeam.push(createGuy(scene, 'away', 'goalie'))
+    state.awayGoalie = createGuy(scene, 'away', 'goalie')
+    state.awayTeam.push(state.awayGoalie)
     state.awayTeam.push(createGuy(scene, 'away', 'wing'))
     state.awayTeam.push(createGuy(scene, 'away', 'defense'))
+
+    state.homeTeam.forEach((p) =>
+      p.setOnCollideWith(
+        state.awayTeam,
+        (data: { gameObject: Guy }, collision: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+          if (
+            !collision.bodyA.gameObject.stunnedTime &&
+            data.gameObject.ball &&
+            Phaser.Math.RND.integerInRange(0, 100) > 66
+          ) {
+            data.gameObject.fumbleNextUpdate = true
+          }
+        }
+      )
+    )
+
+    state.awayTeam.forEach((p) =>
+      p.setOnCollideWith(
+        state.homeTeam,
+        (data: { gameObject: Guy }, collision: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+          if (
+            !collision.bodyA.gameObject.stunnedTime &&
+            data.gameObject.ball &&
+            Phaser.Math.RND.integerInRange(0, 100) > 66
+          ) {
+            data.gameObject.fumbleNextUpdate = true
+          }
+        }
+      )
+    )
 
     state.homeGoal = createGoal(scene, 'home')
     state.awayGoal = createGoal(scene, 'away')

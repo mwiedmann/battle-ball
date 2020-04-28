@@ -43,4 +43,7 @@ const goalScored = (scene: Phaser.Scene, homeAdj: number, awayAdj: number) => {
 
   state.player1 = state.homeTeam.find((p) => p.position === 'center')
   state.player2 = state.awayTeam.find((p) => p.position === 'center')
+
+  state.homeTeam.forEach((p) => p.setHighlight())
+  state.awayTeam.forEach((p) => p.setHighlight())
 }
