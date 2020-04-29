@@ -6,6 +6,7 @@ type IGameState = 'title' | 'faceOff' | 'game' | 'goalScored'
 
 export interface IState {
   gameState: IGameState
+  goalScoredByTeam?: ITeam
   ball?: Ball
   homeTeam: Guy[]
   awayTeam: Guy[]

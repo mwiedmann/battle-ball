@@ -31,6 +31,7 @@ export const gameUpdate = (scene: Phaser.Scene, time: number, delta: number) => 
 
 const goalScored = (scene: Phaser.Scene, homeAdj: number, awayAdj: number) => {
   state.gameState = 'goalScored'
+  state.goalScoredByTeam = homeAdj > 0 ? 'home' : 'away'
   state.nextStateTransitionTime = scene.time.now + 3000
   state.awayScore += awayAdj
   state.homeScore += homeAdj

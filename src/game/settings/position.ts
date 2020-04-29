@@ -133,11 +133,11 @@ export const abilities = {
     legend: { toughness: 99, hitting: 0, speed: 0.18, shotPower: 1.3 },
   },
   wing: {
-    rookie: { toughness: 35, hitting: 0, speed: 0.175, shotPower: 1.25 },
-    veteran: { toughness: 47, hitting: 3, speed: 0.18, shotPower: 1.35 },
-    allStar: { toughness: 60, hitting: 6, speed: 0.185, shotPower: 1.45 },
-    hallOfFamer: { toughness: 72, hitting: 10, speed: 0.195, shotPower: 1.55 },
-    legend: { toughness: 85, hitting: 13, speed: 0.2, shotPower: 1.65 },
+    rookie: { toughness: 35, hitting: 0, speed: 0.17, shotPower: 1.25 },
+    veteran: { toughness: 47, hitting: 3, speed: 0.175, shotPower: 1.35 },
+    allStar: { toughness: 60, hitting: 6, speed: 0.18, shotPower: 1.45 },
+    hallOfFamer: { toughness: 72, hitting: 10, speed: 0.185, shotPower: 1.55 },
+    legend: { toughness: 85, hitting: 13, speed: 0.19, shotPower: 1.65 },
   },
   center: {
     rookie: { toughness: 45, hitting: 4, speed: 0.18, shotPower: 1.1 },

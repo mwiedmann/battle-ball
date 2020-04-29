@@ -39,7 +39,7 @@ export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition,
     }
   )
 
-  guy.startingPosition()
+  guy.startingPosition(true)
 
   guy.setBounce(1)
 
@@ -124,8 +124,10 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     }
   }
 
-  startingPosition() {
-    this.setPosition(this.startX, this.startY)
+  startingPosition(teamScored: boolean) {
+    const starting = this.getStartingPosition(teamScored)
+    this.setPosition(starting.x, starting.y)
+
     this.setVelocity(0, 0)
     this.setAwake()
 
@@ -137,8 +139,21 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     this.stunnedTime = undefined
   }
 
-  moveToStartingPosition() {
-    this.moveToPosition(this.startX, this.startY, 0.3)
+  getStartingPosition(teamScored: boolean) {
+    if (!teamScored && this.position === 'center') {
+      return {
+        x: settingsHelpers.fieldWidthMid + (this.guyRadius * 2 + 8) * (this.team === 'home' ? -1 : 1),
+        y: settingsHelpers.fieldHeightMid,
+      }
+    } else {
+      return { x: this.startX, y: this.startY }
+    }
+  }
+
+  moveToStartingPosition(teamScored: boolean) {
+    const starting = this.getStartingPosition(teamScored)
+
+    this.moveToPosition(starting.x, starting.y, 0.3)
   }
 
   moveToPosition(moveToX: number, moveToY: number, force?: number) {
