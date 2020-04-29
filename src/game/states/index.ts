@@ -48,6 +48,8 @@ export interface IState {
   looseBall: () => boolean
 
   getTeammates: (guy: Guy) => Guy[]
+
+  allPlayers: () => Guy[]
 }
 
 export const state: IState = {
@@ -68,4 +70,6 @@ export const state: IState = {
   looseBall: () => !state.player1?.ball && !state.player2?.ball,
   getTeammates: (guy: Guy) =>
     guy.team === 'home' ? state.homeTeam.filter((g) => g !== guy) : state.awayTeam.filter((g) => g !== guy),
+
+  allPlayers: () => [...state.homeTeam, ...state.awayTeam],
 }

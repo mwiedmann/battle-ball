@@ -4,7 +4,7 @@ import { Ball } from './ball'
 import { state } from '../states'
 import { ITeam } from '../types'
 import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
-import { IPosition, positions, abilities, TAbilityLevel, sizes } from '../settings/position'
+import { IPosition, positions, abilities, TAbilityLevel, sizes, goaltendingAbilities } from '../settings/position'
 import { closestNonGoalie } from '../helpers/guy-helper'
 
 export interface IGuyConfig {
@@ -67,11 +67,15 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     this.guyRadius = options.circleRadius!
 
     const ability = abilities[position][level]
+    const goaltendingAbility = goaltendingAbilities[level]
 
     this.toughness = ability.toughness
     this.hitting = ability.hitting
     this.speed = ability.speed
     this.shotPower = ability.shotPower
+    this.recovery = ability.recovery
+    this.goaltendingTime = goaltendingAbility.reactionTime
+    this.goaltendingAccuracy = goaltendingAbility.accuracy
   }
 
   startX: number
@@ -96,6 +100,9 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
   hitting: number
   speed: number
   shotPower: number
+  recovery: number
+  goaltendingTime: number
+  goaltendingAccuracy: number
 
   grabBall(ball: Ball) {
     // Guy can only grab the ball during the 'game' state
@@ -103,6 +110,9 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       this.setActivePlayer()
       ball.grabbed()
       this.ball = ball
+
+      // A new player has the ball so all players should re-eval their positions
+      state.allPlayers().forEach((p) => (p.goToPositionTime = 0))
 
       // If the goalie catches the ball, have him go up or down briefly and pass it out.
       if (this.position === 'goalie') {
@@ -168,9 +178,13 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
   }
 
   gotHit(otherGuy: Guy) {
+    const r = Phaser.Math.RND.integerInRange(0, 100)
     // Random number + the other guys hitting needs to be this guys toughness to make him fumble
-    if (Phaser.Math.RND.integerInRange(0, 100) + otherGuy.hitting > this.toughness) {
+    if (r + otherGuy.hitting > this.toughness) {
       this.fumbleNextUpdate = true
+      console.log('Turnover', r, otherGuy.hitting, this.toughness)
+    } else {
+      console.log('Nope', r, otherGuy.hitting, this.toughness)
     }
   }
 
@@ -181,8 +195,8 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       this.ball.shootInDirection(
         new Phaser.Math.Vector2(Phaser.Math.RND.normal(), Phaser.Math.RND.normal()).normalize().scale(0.3)
       )
-      this.dropBall(1000)
-      this.stunnedTime = this.scene.time.now + 1000
+      this.dropBall(this.recovery)
+      this.stunnedTime = this.scene.time.now + this.recovery
     }
   }
 
@@ -299,8 +313,6 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
   }
 
   update() {
-    const force = 0.2
-
     // Check player controls
     // TODO: Analog controls with joytick
     const left =
@@ -360,19 +372,19 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     }
 
     if (left) {
-      this.applyForce(new Phaser.Math.Vector2(-force, 0))
+      this.applyForce(new Phaser.Math.Vector2(-this.speed, 0))
     }
 
     if (right) {
-      this.applyForce(new Phaser.Math.Vector2(force, 0))
+      this.applyForce(new Phaser.Math.Vector2(this.speed, 0))
     }
 
     if (up) {
-      this.applyForce(new Phaser.Math.Vector2(0, -force))
+      this.applyForce(new Phaser.Math.Vector2(0, -this.speed))
     }
 
     if (down) {
-      this.applyForce(new Phaser.Math.Vector2(0, force))
+      this.applyForce(new Phaser.Math.Vector2(0, this.speed))
     }
 
     if (
@@ -400,7 +412,7 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
         }
         force = 0.3
       } else if (this.goToPositionTime <= this.scene.time.now) {
-        this.goToPositionTime = this.scene.time.now + Phaser.Math.RND.integerInRange(0, 500)
+        this.goToPositionTime = this.scene.time.now + this.goaltendingTime
         const goal = this.team === 'home' ? state.homeGoal : state.awayGoal
 
         // As goalie, try to position between the ball and the goal
@@ -419,8 +431,11 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
         // If there is a spot between the ball and the goal, then move there.
         // The AI will move around the spot so their defense is not perfect.
         if (hasGuardSpot) {
-          this.goToPositionX = Phaser.Math.RND.integerInRange(guardPoint.x - 25, guardPoint.x + 25)
-          this.goToPositionY = Phaser.Math.RND.integerInRange(guardPoint.y - 50, guardPoint.y + 50)
+          this.goToPositionX = Phaser.Math.RND.integerInRange(guardPoint.x - 10, guardPoint.x + 10)
+          this.goToPositionY = Phaser.Math.RND.integerInRange(
+            guardPoint.y - this.goaltendingAccuracy,
+            guardPoint.y + this.goaltendingAccuracy
+          )
         } else {
           // If the ball is being held behind the goal,
           // The goalie stays on his line matches the Y position.

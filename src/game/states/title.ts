@@ -35,8 +35,8 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) =>
       data: { gameObject: Guy },
       collision: Phaser.Types.Physics.Matter.MatterCollisionData
     ) => {
-      if (!collision.bodyA.gameObject.stunnedTime && data.gameObject.ball) {
-        data.gameObject.gotHit(collision.bodyA.gameObject)
+      if (!collision.bodyB.gameObject.stunnedTime && data.gameObject.ball) {
+        data.gameObject.gotHit(collision.bodyB.gameObject)
       }
     }
 
