@@ -23,8 +23,17 @@ function preload(this: Phaser.Scene) {
   this.load.image('title', 'images/title-screen.png')
   this.load.image('goal', 'images/goal.png')
   this.load.image('ball', 'images/ball.png')
-  this.load.spritesheet('home-player', 'images/blue-guy.png', { frameWidth: 64 })
-  this.load.spritesheet('away-player', 'images/red-guy.png', { frameWidth: 64 })
+
+  this.load.spritesheet('home-center', 'images/blue-center.png', { frameWidth: 64 })
+  this.load.spritesheet('home-goalie', 'images/blue-goalie.png', { frameWidth: 64 })
+  this.load.spritesheet('home-wing', 'images/blue-wing.png', { frameWidth: 52 })
+  this.load.spritesheet('home-defense', 'images/blue-defense.png', { frameWidth: 76 })
+
+  this.load.spritesheet('away-center', 'images/red-center.png', { frameWidth: 64 })
+  this.load.spritesheet('away-goalie', 'images/red-goalie.png', { frameWidth: 64 })
+  this.load.spritesheet('away-wing', 'images/red-wing.png', { frameWidth: 52 })
+  this.load.spritesheet('away-defense', 'images/red-defense.png', { frameWidth: 76 })
+
   this.load.image('home-score', 'images/home-score.png')
   this.load.image('away-score', 'images/away-score.png')
   this.load.image('x', 'images/x.png')
@@ -37,8 +46,8 @@ function preload(this: Phaser.Scene) {
 function create(this: Phaser.Scene) {
   controls = {
     cursors: this.input.keyboard.createCursorKeys(),
-    p1Shoot: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL),
-    p1Pass: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ALT),
+    p1Shoot: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z),
+    p1Pass: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
     retrieveBall: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
     p2Up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
     p2Down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),

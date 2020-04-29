@@ -4,20 +4,28 @@ import { Ball } from './ball'
 import { state } from '../states'
 import { ITeam } from '../types'
 import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
-import { IPosition, positions } from '../settings/position'
+import { IPosition, positions, abilities, TAbilityLevel, sizes } from '../settings/position'
 import { closestNonGoalie } from '../helpers/guy-helper'
 
-const circleRadius = 32
+export interface IGuyConfig {
+  level: TAbilityLevel
+  team: ITeam
+  position: IPosition
+}
 
-export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition) => {
+export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition, level: TAbilityLevel) => {
+  const positionData = positions[team][position]
+  const circleRadius = sizes[position]
+
   const guy = new Guy(
     scene.matter.world,
-    positions[team][position].startX,
-    positions[team][position].startY,
-    `${team}-player`,
+    positionData.startX,
+    positionData.startY,
+    `${team}-${position}`,
     team,
     position,
-    undefined,
+    level,
+    0,
     {
       circleRadius,
       friction: 0.03,
@@ -48,23 +56,33 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     texture: string,
     public team: ITeam,
     public position: IPosition,
-    frame?: string | integer,
-    options?: Phaser.Types.Physics.Matter.MatterBodyConfig
+    public level: TAbilityLevel,
+    frame: string | integer,
+    options: Phaser.Types.Physics.Matter.MatterBodyConfig
   ) {
     super(world, x, y, texture, frame, options)
 
     this.startX = x
     this.startY = y
+    this.guyRadius = options.circleRadius!
+
+    const ability = abilities[position][level]
+
+    this.toughness = ability.toughness
+    this.hitting = ability.hitting
+    this.speed = ability.speed
+    this.shotPower = ability.shotPower
   }
 
   startX: number
   startY: number
+  guyRadius: number
 
   ball?: Ball
   canGrabBallNext?: number
   stunnedTime?: number
   lastMask = 0
-  shotPower = 1.3
+
   timeToNextActionWithBall?: number
 
   goToPositionX = 0
@@ -73,6 +91,11 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
   goToPositionTime = 0
 
   fumbleNextUpdate = false
+
+  toughness: number
+  hitting: number
+  speed: number
+  shotPower: number
 
   grabBall(ball: Ball) {
     // Guy can only grab the ball during the 'game' state
@@ -124,8 +147,15 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
         new Phaser.Math.Vector2(moveToX, moveToY)
           .subtract(new Phaser.Math.Vector2(this.x, this.y))
           .normalize()
-          .scale(force || 0.2)
+          .scale(force || this.speed)
       )
+    }
+  }
+
+  gotHit(otherGuy: Guy) {
+    // Random number + the other guys hitting needs to be this guys toughness to make him fumble
+    if (Phaser.Math.RND.integerInRange(0, 100) + otherGuy.hitting > this.toughness) {
+      this.fumbleNextUpdate = true
     }
   }
 
@@ -190,16 +220,24 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       return false
     }
 
+    const homePass = (guy: Guy) =>
+      (!left || guy.x <= this.x) &&
+      (!right || guy.x >= this.x) &&
+      (!up || (guy.x >= this.x && guy.y <= this.y)) &&
+      (!down || (guy.x >= this.x && guy.y >= this.y))
+
+    const awayPass = (guy: Guy) =>
+      (!left || guy.x <= this.x) &&
+      (!right || guy.x >= this.x) &&
+      (!up || (guy.x <= this.x && guy.y <= this.y)) &&
+      (!down || (guy.x <= this.x && guy.y >= this.y))
+
     // First, try to find a teammate in the direction the player is aiming
     let closestTeammate = closestNonGoalie(
       state.getTeammates(this),
       this.x,
       this.y,
-      (guy: Guy) =>
-        (!left || guy.x <= this.x) &&
-        (!right || guy.x >= this.x) &&
-        (!up || guy.y <= this.y) &&
-        (!down || guy.y >= this.y)
+      this.team === 'home' ? homePass : awayPass
     )
 
     // If no teammates in that exact direction, pass to the closest
@@ -214,7 +252,7 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
         const otherTeam = this.team === 'home' ? state.awayTeam : state.homeTeam
 
         const canBlock = otherTeam.find((p) => {
-          const circle = new Phaser.Geom.Circle(p.x, p.y, circleRadius * 1.25)
+          const circle = new Phaser.Geom.Circle(p.x, p.y, this.guyRadius * 1.25)
           return Phaser.Geom.Intersects.LineToCircle(line, circle)
         })
 
@@ -236,15 +274,28 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
 
   setHighlight() {
     // Use the highlighted player for the active guys
-    this.setFrame(state.player1 === this || state.player2 == this ? 1 : 0)
+    this.setFrame(
+      this.stunnedTime
+        ? 2
+        : (!state.player1AI && state.player1 === this) || (!state.player2AI && state.player2 == this)
+        ? 1
+        : 0
+    )
   }
 
   update() {
     const force = 0.2
-    let left = false
-    let right = false
-    let up = false
-    let down = false
+
+    // Check player controls
+    // TODO: Analog controls with joytick
+    const left =
+      (state.player1 === this && controls.cursors.left?.isDown) || (state.player2 === this && controls.p2Left.isDown)
+    const right =
+      (state.player1 === this && controls.cursors.right?.isDown) || (state.player2 === this && controls.p2Right.isDown)
+    const up =
+      (state.player1 === this && controls.cursors.up?.isDown) || (state.player2 === this && controls.p2Up.isDown)
+    const down =
+      (state.player1 === this && controls.cursors.down?.isDown) || (state.player2 === this && controls.p2Down.isDown)
 
     this.setHighlight()
 
@@ -293,32 +344,19 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       return this.ai()
     }
 
-    if (
-      (state.player1 === this && controls.cursors.left?.isDown) ||
-      (state.player2 === this && controls.p2Left.isDown)
-    ) {
-      left = true
+    if (left) {
       this.applyForce(new Phaser.Math.Vector2(-force, 0))
     }
 
-    if (
-      (state.player1 === this && controls.cursors.right?.isDown) ||
-      (state.player2 === this && controls.p2Right.isDown)
-    ) {
-      right = true
+    if (right) {
       this.applyForce(new Phaser.Math.Vector2(force, 0))
     }
 
-    if ((state.player1 === this && controls.cursors.up?.isDown) || (state.player2 === this && controls.p2Up.isDown)) {
-      up = true
+    if (up) {
       this.applyForce(new Phaser.Math.Vector2(0, -force))
     }
 
-    if (
-      (state.player1 === this && controls.cursors.down?.isDown) ||
-      (state.player2 === this && controls.p2Down.isDown)
-    ) {
-      down = true
+    if (down) {
       this.applyForce(new Phaser.Math.Vector2(0, force))
     }
 
@@ -331,7 +369,7 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
   }
 
   ai() {
-    let force = 0.2
+    let force = this.speed
 
     if (this.position === 'goalie') {
       if (this.ball) {
@@ -384,9 +422,22 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       }
       this.moveToPosition(this.goToPositionX, this.goToPositionY, force)
     } else {
+      // Check if stuck behind the goals
+      if (
+        (this.x <= state.homeGoal!.x && this.y >= state.homeGoal!.y - 250 && this.y <= state.homeGoal!.y + 250) ||
+        (this.x >= state.awayGoal!.x && this.y >= state.homeGoal!.y - 250 && this.y <= state.homeGoal!.y + 250)
+      ) {
+        if (this.y <= state.homeGoal!.y) {
+          this.goToPositionY = state.homeGoal!.y - 350
+        } else {
+          this.goToPositionY = state.homeGoal!.y + 350
+        }
+
+        this.moveToPosition(this.goToPositionX, this.goToPositionY)
+      }
       // If this guy is closest to the ball on defense or in a loose ball situation,
       // move to the ball.
-      if (
+      else if (
         (this.team === 'home' && state.homeClosestToBall === this && !state.awayGoalie?.ball) ||
         (this.team === 'away' && state.awayClosestToBall === this && !state.homeGoalie?.ball)
       ) {
