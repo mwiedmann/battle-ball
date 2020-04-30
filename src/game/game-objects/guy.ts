@@ -182,9 +182,6 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     // Random number + the other guys hitting needs to be this guys toughness to make him fumble
     if (r + otherGuy.hitting > this.toughness) {
       this.fumbleNextUpdate = true
-      console.log('Turnover', r, otherGuy.hitting, this.toughness)
-    } else {
-      console.log('Nope', r, otherGuy.hitting, this.toughness)
     }
   }
 
