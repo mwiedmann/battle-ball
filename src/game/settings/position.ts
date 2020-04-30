@@ -208,4 +208,4 @@ export const abilities = {
   },
 }
 
-export type TAbilityLevel = 'rookie' | 'veteran' | 'allStar' | 'hallOfFamer' | 'legend'
+export type IAbilityLevel = 'rookie' | 'veteran' | 'allStar' | 'hallOfFamer' | 'legend'

@@ -4,32 +4,107 @@ import { state } from '.'
 import { createBall } from '../game-objects/ball'
 import { createGuy, Guy } from '../game-objects/guy'
 import { createGoal } from '../game-objects/goal'
+import { IAbilityLevel, IPosition } from '../settings/position'
+import { ITeam } from '../types'
 
-export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number) => {
+const settings: {
+  [k in ITeam]: {
+    [k in IPosition]: {
+      level: IAbilityLevel
+      yOffset: number
+      buttons?: { [k in IAbilityLevel]?: Phaser.GameObjects.Arc }
+    }
+  }
+} = {
+  home: {
+    center: { level: 'allStar', yOffset: 715 },
+    wing: { level: 'allStar', yOffset: 797 },
+    defense: { level: 'allStar', yOffset: 877 },
+    goalie: { level: 'allStar', yOffset: 955 },
+  },
+  away: {
+    center: { level: 'allStar', yOffset: 715 },
+    wing: { level: 'allStar', yOffset: 797 },
+    defense: { level: 'allStar', yOffset: 877 },
+    goalie: { level: 'allStar', yOffset: 955 },
+  },
+}
+
+const homeX = 270
+const awayX = 1140
+
+const levelXPosition: { [k in IAbilityLevel]: number } = {
+  rookie: 0,
+  veteran: 108,
+  allStar: 222,
+  hallOfFamer: 342,
+  legend: 462,
+}
+
+export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, init: boolean) => {
+  if (init) {
+    const ha: ITeam[] = ['home', 'away']
+    const positions: IPosition[] = ['center', 'wing', 'defense', 'goalie']
+    const level: IAbilityLevel[] = ['rookie', 'veteran', 'allStar', 'hallOfFamer', 'legend']
+
+    const updateButtons = () => {
+      ha.forEach((side) => {
+        positions.forEach((p) => {
+          if (!settings[side][p].buttons) {
+            settings[side][p].buttons = {}
+          }
+          level.forEach((l) => {
+            const data = settings[side][p]
+            if (!settings[side][p].buttons![l]) {
+              settings[side][p].buttons![l] = scene.add
+                .circle(
+                  (side === 'home' ? homeX : awayX) + levelXPosition[l],
+                  data.yOffset,
+                  16,
+                  settings[side][p].level === l ? 0x0000ff : 0
+                )
+                .setInteractive()
+                .on('pointerdown', () => {
+                  settings[side][p].level = l
+                  updateButtons()
+                })
+            } else {
+              settings[side][p].buttons![l]!.fillColor = settings[side][p].level === l ? 0x0000ff : 0
+            }
+          })
+        })
+      })
+    }
+
+    updateButtons()
+
+    return
+  }
+
   // When spacebar pressed, close the title screen and create a player and ball for testing
   if (controls.p1Shoot.isDown) {
+    scene.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'background')
+
     state.gameState = 'faceOff'
     state.nextStateTransitionTime = scene.time.now + 3000
 
     titleScreen.destroy()
 
-    const defaultLevel = 'allStar'
-
-    state.player1 = createGuy(scene, 'home', 'center', defaultLevel)
+    state.player1 = createGuy(scene, 'home', 'center', settings['home']['center'].level)
     state.homeTeam.push(state.player1)
     state.player1.setHighlight()
-    state.homeGoalie = createGuy(scene, 'home', 'goalie', defaultLevel)
+    state.homeGoalie = createGuy(scene, 'home', 'goalie', settings['home']['goalie'].level)
     state.homeTeam.push(state.homeGoalie)
-    state.homeTeam.push(createGuy(scene, 'home', 'wing', defaultLevel))
-    state.homeTeam.push(createGuy(scene, 'home', 'defense', defaultLevel))
+    state.homeTeam.push(createGuy(scene, 'home', 'wing', settings['home']['wing'].level))
+    state.homeTeam.push(createGuy(scene, 'home', 'defense', settings['home']['defense'].level))
 
-    state.player2 = createGuy(scene, 'away', 'center', defaultLevel)
+    state.player2 = createGuy(scene, 'away', 'center', settings['away']['center'].level)
     state.awayTeam.push(state.player2)
     state.player2.setHighlight()
-    state.awayGoalie = createGuy(scene, 'away', 'goalie', defaultLevel)
+    state.awayGoalie = createGuy(scene, 'away', 'goalie', settings['away']['goalie'].level)
     state.awayTeam.push(state.awayGoalie)
-    state.awayTeam.push(createGuy(scene, 'away', 'wing', defaultLevel))
-    state.awayTeam.push(createGuy(scene, 'away', 'defense', defaultLevel))
+    state.awayTeam.push(createGuy(scene, 'away', 'wing', settings['away']['wing'].level))
+    state.awayTeam.push(createGuy(scene, 'away', 'defense', settings['away']['defense'].level))
 
     const gotHitCollisionCheck = (
       data: { gameObject: Guy },

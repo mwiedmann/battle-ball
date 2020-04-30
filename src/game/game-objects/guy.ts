@@ -4,16 +4,16 @@ import { Ball } from './ball'
 import { state } from '../states'
 import { ITeam } from '../types'
 import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
-import { IPosition, positions, abilities, TAbilityLevel, sizes, goaltendingAbilities } from '../settings/position'
+import { IPosition, positions, abilities, IAbilityLevel, sizes, goaltendingAbilities } from '../settings/position'
 import { closestNonGoalie } from '../helpers/guy-helper'
 
 export interface IGuyConfig {
-  level: TAbilityLevel
+  level: IAbilityLevel
   team: ITeam
   position: IPosition
 }
 
-export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition, level: TAbilityLevel) => {
+export const createGuy = (scene: Phaser.Scene, team: ITeam, position: IPosition, level: IAbilityLevel) => {
   const positionData = positions[team][position]
   const circleRadius = sizes[position]
 
@@ -56,7 +56,7 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     texture: string,
     public team: ITeam,
     public position: IPosition,
-    public level: TAbilityLevel,
+    public level: IAbilityLevel,
     frame: string | integer,
     options: Phaser.Types.Physics.Matter.MatterBodyConfig
   ) {

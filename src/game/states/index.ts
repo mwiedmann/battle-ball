@@ -2,7 +2,7 @@ import { Ball } from '../game-objects/ball'
 import { Guy } from '../game-objects/guy'
 import { ITeam } from '../types'
 
-type IGameState = 'title' | 'faceOff' | 'game' | 'goalScored'
+export type IGameState = 'title' | 'faceOff' | 'game' | 'goalScored'
 
 export interface IState {
   gameState: IGameState

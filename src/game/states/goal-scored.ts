@@ -1,6 +1,6 @@
 import { state } from '.'
 
-export const goalScoredUpdate = (scene: Phaser.Scene, time: number, delta: number) => {
+export const goalScoredUpdate = (scene: Phaser.Scene, time: number, delta: number, init: boolean) => {
   // See if celebration time is over
   if (state.nextStateTransitionTime <= scene.time.now) {
     state.ball?.startingPosition()

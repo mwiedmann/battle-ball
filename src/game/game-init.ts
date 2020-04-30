@@ -20,7 +20,7 @@ export let controls: {
 /** Load all the images we need and assign them names */
 function preload(this: Phaser.Scene) {
   this.load.image('background', 'images/background.png')
-  this.load.image('title', 'images/title-screen.png')
+  this.load.image('title', 'images/main-screen.png')
   this.load.image('goal', 'images/goal.png')
   this.load.image('ball', 'images/ball.png')
 
@@ -56,8 +56,6 @@ function create(this: Phaser.Scene) {
     p2Shoot: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
     p2Pass: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
   }
-
-  this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'background')
 
   titleScreen = this.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'title')
   this.matter.world.setBounds(0, 0, settingsHelpers.worldBoundWidth, settingsHelpers.worldBoundHeight)

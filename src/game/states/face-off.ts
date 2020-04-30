@@ -3,7 +3,7 @@ import { gameSettings, settingsHelpers } from '../consts'
 
 let readyText: Phaser.GameObjects.Text | undefined
 
-export const faceOffUpdate = (scene: Phaser.Scene, time: number, delta: number) => {
+export const faceOffUpdate = (scene: Phaser.Scene, time: number, delta: number, init: boolean) => {
   if (state.nextStateTransitionTime <= scene.time.now) {
     state.gameState = 'game'
     readyText?.destroy()
