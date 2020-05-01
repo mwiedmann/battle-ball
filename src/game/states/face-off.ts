@@ -1,11 +1,12 @@
 import { state } from '.'
 import { gameSettings, settingsHelpers } from '../consts'
+import { gameState } from '../update'
 
 let readyText: Phaser.GameObjects.Text | undefined
 
 export const faceOffUpdate = (scene: Phaser.Scene, time: number, delta: number, init: boolean) => {
-  if (state.nextStateTransitionTime <= scene.time.now) {
-    state.gameState = 'game'
+  if (gameState.nextStateTransitionTime <= scene.time.now) {
+    gameState.phase = 'game'
     readyText?.destroy()
     readyText = undefined
     return
@@ -21,6 +22,6 @@ export const faceOffUpdate = (scene: Phaser.Scene, time: number, delta: number, 
     })
   }
 
-  const remainingTime = Phaser.Math.CeilTo((state.nextStateTransitionTime - scene.time.now) / 1000, 0)
+  const remainingTime = Phaser.Math.CeilTo((gameState.nextStateTransitionTime - scene.time.now) / 1000, 0)
   readyText.text = `GET READY\n${remainingTime}`
 }

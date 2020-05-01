@@ -17,22 +17,6 @@ const goalLocations = {
 }
 
 export const createGoal = (scene: Phaser.Scene, team: ITeam) => {
-  const goalShape = scene.cache.json.get('goal')
-  const goal = scene.matter.add.image(goalLocations[team].goal.x, settingsHelpers.fieldHeightMid, 'goal', undefined, {
-    shape: goalShape.goal,
-    isStatic: true,
-  } as any)
-
-  goal.setRotation(goalLocations[team].goal.rotation)
-
-  // Restricted area around goal
-  scene.matter.add.rectangle(goalLocations[team].restrictedArea.x, settingsHelpers.fieldHeightMid, 212, 384, {
-    isStatic: true,
-    collisionFilter: {
-      category: team === 'home' ? CollisionCategory.GoalRestrictedAreaHome : CollisionCategory.GoalRestrictedAreaAway,
-    },
-  })
-
   // Area inside goal that triggers a goal scored
   const scoreArea = scene.matter.add.rectangle(
     goalLocations[team].scoringArea.x,
@@ -48,11 +32,45 @@ export const createGoal = (scene: Phaser.Scene, team: ITeam) => {
     }
   )
 
-  if (team === 'home') {
-    state.homeScoreArea = scoreArea
-  } else {
-    state.awayScoreArea = scoreArea
-  }
+  const goalShape = scene.cache.json.get('goal')
+  const goal = new Goal(
+    scene.matter.world,
+    goalLocations[team].goal.x,
+    settingsHelpers.fieldHeightMid,
+    'goal',
+    scoreArea,
+    undefined,
+    {
+      shape: goalShape.goal,
+      isStatic: true,
+    } as any
+  )
+
+  scene.add.existing(goal)
+
+  goal.setRotation(goalLocations[team].goal.rotation)
+
+  // Restricted area around goal
+  scene.matter.add.rectangle(goalLocations[team].restrictedArea.x, settingsHelpers.fieldHeightMid, 212, 384, {
+    isStatic: true,
+    collisionFilter: {
+      category: team === 'home' ? CollisionCategory.GoalRestrictedAreaHome : CollisionCategory.GoalRestrictedAreaAway,
+    },
+  })
 
   return goal
+}
+
+export class Goal extends Phaser.Physics.Matter.Image {
+  constructor(
+    world: Phaser.Physics.Matter.World,
+    x: number,
+    y: number,
+    texture: string,
+    public scoreArea: MatterJS.BodyType,
+    frame?: string | integer,
+    options?: Phaser.Types.Physics.Matter.MatterBodyConfig
+  ) {
+    super(world, x, y, texture, frame, options)
+  }
 }

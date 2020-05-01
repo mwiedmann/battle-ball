@@ -1,11 +1,12 @@
-import { gameSettings, settingsHelpers } from '../consts'
+import { settingsHelpers } from '../consts'
 import { controls } from '../game-init'
 import { Ball } from './ball'
 import { state } from '../states'
 import { ITeam } from '../types'
-import { CollisionCategory, FieldPlayerCollisionMask } from '../types/collision'
+import { CollisionCategory } from '../types/collision'
 import { IPosition, positions, abilities, IAbilityLevel, sizes, goaltendingAbilities } from '../settings/position'
 import { closestNonGoalie } from '../helpers/guy-helper'
+import { gameState } from '../update'
 
 export interface IGuyConfig {
   level: IAbilityLevel
@@ -106,7 +107,7 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
 
   grabBall(ball: Ball) {
     // Guy can only grab the ball during the 'game' state
-    if (state.gameState === 'game') {
+    if (gameState.phase === 'game') {
       this.setActivePlayer()
       ball.grabbed()
       this.ball = ball
@@ -231,10 +232,11 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
 
     // If this is the goalie, swtich control to another guy
     if (this.position === 'goalie') {
+      const newPlayer = state.getFirstPlayer(this.team, (p) => p.position !== 'goalie')
       if (this.team === 'home') {
-        state.player1 = state.homeTeam.find((p) => p.position !== 'goalie')
+        state.player1 = newPlayer
       } else {
-        state.player2 = state.awayTeam.find((p) => p.position !== 'goalie')
+        state.player2 = newPlayer
       }
     }
 
@@ -394,8 +396,6 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
 
   ai() {
     let force = this.speed
-    const homeGoal = state.homeGoalGet()
-    const awayGoal = state.awayGoalGet()
 
     if (this.position === 'goalie') {
       if (this.ball) {
@@ -418,7 +418,7 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
         let guardPoint = new Phaser.Geom.Point()
 
         const hasGuardSpot = Phaser.Geom.Intersects.LineToLine(
-          new Phaser.Geom.Line(state.ball?.x, state.ball?.y, goal?.x, goal?.y),
+          new Phaser.Geom.Line(state.ball.x, state.ball.y, goal.x, goal.y),
           new Phaser.Geom.Line(this.startX, this.startY - 200, this.startX, this.startY + 200),
           guardPoint
         )
@@ -440,11 +440,11 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
           // The goalie stays on his line matches the Y position.
           // Again, there is some variance so the defense is not perfect
           const goToY =
-            state.ballGet().y > this.startY + 200
+            state.ball.y > this.startY + 200
               ? this.startY + 200
-              : state.ballGet().y < this.startY - 200
+              : state.ball.y < this.startY - 200
               ? this.startY - 200
-              : state.ballGet().y
+              : state.ball.y
           this.goToPositionX = Phaser.Math.RND.integerInRange(this.startX - 25, this.startX + 25)
           this.goToPositionY = Phaser.Math.RND.integerInRange(goToY - 50, goToY + 50)
         }
@@ -453,13 +453,13 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
     } else {
       // Check if stuck behind the goals
       if (
-        (this.x <= homeGoal.x && this.y >= homeGoal.y - 250 && this.y <= homeGoal.y + 250) ||
-        (this.x >= awayGoal.x && this.y >= awayGoal.y - 250 && this.y <= awayGoal.y + 250)
+        (this.x <= state.homeGoal.x && this.y >= state.homeGoal.y - 250 && this.y <= state.homeGoal.y + 250) ||
+        (this.x >= state.awayGoal.x && this.y >= state.awayGoal.y - 250 && this.y <= state.awayGoal.y + 250)
       ) {
-        if (this.y <= homeGoal.y) {
-          this.goToPositionY = homeGoal.y - 350
+        if (this.y <= state.homeGoal.y) {
+          this.goToPositionY = state.homeGoal.y - 350
         } else {
-          this.goToPositionY = homeGoal.y + 350
+          this.goToPositionY = state.homeGoal.y + 350
         }
 
         this.moveToPosition(this.goToPositionX, this.goToPositionY)
@@ -467,10 +467,10 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       // If this guy is closest to the ball on defense or in a loose ball situation,
       // move to the ball.
       else if (
-        (this.team === 'home' && state.homeClosestToBall === this && !state.awayGoalie?.ball) ||
-        (this.team === 'away' && state.awayClosestToBall === this && !state.homeGoalie?.ball)
+        (this.team === 'home' && state.homeClosestToBall === this && !state.awayGoalie.ball) ||
+        (this.team === 'away' && state.awayClosestToBall === this && !state.homeGoalie.ball)
       ) {
-        this.moveToPosition(state.ballGet().x, state.ballGet().y)
+        this.moveToPosition(state.ball.x, state.ball.y)
       } else {
         const positionData = positions[this.team][this.position]
 
@@ -497,17 +497,17 @@ export class Guy extends Phaser.Physics.Matter.Sprite {
       if (
         this.ball &&
         this.team === 'home' &&
-        Phaser.Math.Distance.Between(this.x, this.y, awayGoal.x, awayGoal.y) <= 400
+        Phaser.Math.Distance.Between(this.x, this.y, state.awayGoal.x, state.awayGoal.y) <= 400
       ) {
-        this.ball.shootAtTarget(awayGoal)
+        this.ball.shootAtTarget(state.awayGoal)
         this.dropBall()
         this.timeToNextActionWithBall = undefined
       } else if (
         this.ball &&
         this.team === 'away' &&
-        Phaser.Math.Distance.Between(this.x, this.y, homeGoal.x, homeGoal.y) <= 400
+        Phaser.Math.Distance.Between(this.x, this.y, state.homeGoal.x, state.homeGoal.y) <= 400
       ) {
-        this.ball.shootAtTarget(homeGoal)
+        this.ball.shootAtTarget(state.homeGoal)
         this.dropBall()
         this.timeToNextActionWithBall = undefined
       }

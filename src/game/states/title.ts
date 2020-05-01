@@ -1,13 +1,11 @@
 import { settingsHelpers, gameSettings } from '../consts'
 import { controls, titleScreen } from '../game-init'
-import { state } from '.'
-import { createBall } from '../game-objects/ball'
-import { createGuy, Guy } from '../game-objects/guy'
-import { createGoal } from '../game-objects/goal'
+import { state, constructState } from '.'
 import { IAbilityLevel, IPosition } from '../settings/position'
 import { ITeam } from '../types'
+import { gameState } from '../update'
 
-const settings: {
+export const teamConfigSettings: {
   [k in ITeam]: {
     [k in IPosition]: {
       level: IAbilityLevel
@@ -47,11 +45,12 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, in
     const positions: IPosition[] = ['center', 'wing', 'defense', 'goalie']
     const level: IAbilityLevel[] = ['rookie', 'veteran', 'allStar', 'hallOfFamer', 'legend']
 
+    // Create the array of clickable areas on the player/level selection screen
     const updateButtons = () => {
       ha.forEach((side) => {
         positions.forEach((p) => {
           // Get the setting for this side and position (e.g. home wing)
-          const setting = settings[side][p]
+          const setting = teamConfigSettings[side][p]
           if (!setting.buttons) {
             // Create the buttons object (holds the buttons for each level at this position)
             setting.buttons = {}
@@ -68,18 +67,18 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, in
                   (side === 'home' ? homeX : awayX) + levelXPosition[l],
                   data.yOffset,
                   16,
-                  settings[side][p].level === l ? 0x0000ff : 0
+                  teamConfigSettings[side][p].level === l ? 0x0000ff : 0
                 )
                 .setInteractive()
                 .on('pointerdown', () => {
-                  settings[side][p].level = l
+                  teamConfigSettings[side][p].level = l
                   updateButtons()
                 })
             } else {
               if (!button) {
                 throw new Error(`Settings error. Button not defined for ${side} ${p} ${l}`)
               }
-              button.fillColor = settings[side][p].level === l ? 0x0000ff : 0
+              button.fillColor = teamConfigSettings[side][p].level === l ? 0x0000ff : 0
             }
           })
         })
@@ -94,62 +93,12 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, in
   // When spacebar pressed, close the title screen and create a player and ball for testing
   if (controls.p1Shoot.isDown) {
     scene.add.image(settingsHelpers.fieldWidthMid, settingsHelpers.fieldHeightMid, 'background')
-
-    state.gameState = 'faceOff'
-    state.nextStateTransitionTime = scene.time.now + 3000
-
     titleScreen.destroy()
 
-    state.player1 = createGuy(scene, 'home', 'center', settings['home']['center'].level)
-    state.homeTeam.push(state.player1)
-    state.player1.setHighlight()
-    state.homeGoalie = createGuy(scene, 'home', 'goalie', settings['home']['goalie'].level)
-    state.homeTeam.push(state.homeGoalie)
-    state.homeTeam.push(createGuy(scene, 'home', 'wing', settings['home']['wing'].level))
-    state.homeTeam.push(createGuy(scene, 'home', 'defense', settings['home']['defense'].level))
+    constructState(scene)
 
-    state.player2 = createGuy(scene, 'away', 'center', settings['away']['center'].level)
-    state.awayTeam.push(state.player2)
-    state.player2.setHighlight()
-    state.awayGoalie = createGuy(scene, 'away', 'goalie', settings['away']['goalie'].level)
-    state.awayTeam.push(state.awayGoalie)
-    state.awayTeam.push(createGuy(scene, 'away', 'wing', settings['away']['wing'].level))
-    state.awayTeam.push(createGuy(scene, 'away', 'defense', settings['away']['defense'].level))
-
-    const gotHitCollisionCheck = (
-      data: { gameObject: Guy },
-      collision: Phaser.Types.Physics.Matter.MatterCollisionData
-    ) => {
-      if (!collision.bodyB.gameObject.stunnedTime && data.gameObject.ball) {
-        data.gameObject.gotHit(collision.bodyB.gameObject)
-      }
-    }
-
-    state.homeTeam.forEach((p) => p.setOnCollideWith(state.awayTeam, gotHitCollisionCheck))
-
-    state.awayTeam.forEach((p) => p.setOnCollideWith(state.homeTeam, gotHitCollisionCheck))
-
-    state.homeGoal = createGoal(scene, 'home')
-    state.awayGoal = createGoal(scene, 'away')
-
-    state.ball = createBall(scene)
-
-    state.homeScoreImage = scene.add.image(360, 180, 'home-score').setScrollFactor(0)
-    state.homeText = scene.add
-      .text(410, 145, '0', { fontSize: '60px', color: '#0094FF', fontFamily: 'Verdana' })
-      .setScrollFactor(0)
-
-    state.awayScoreImage = scene.add.image(1560, 180, 'away-score').setScrollFactor(0)
-    state.awayText = scene.add
-      .text(1605, 145, '0', { fontSize: '60px', color: '#FF0000', fontFamily: 'Verdana' })
-      .setScrollFactor(0)
-
-    // Players can grab the ball
-    state.ball.setOnCollideWith([...state.homeTeam, ...state.awayTeam], (
-      data: any /*Phaser.Types.Physics.Matter.MatterCollisionData */
-    ) => {
-      data.gameObject.grabBall(state.ballGet())
-    })
+    gameState.phase = 'faceOff'
+    gameState.nextStateTransitionTime = scene.time.now + 3000
 
     scene.cameras.main.setZoom(gameSettings.gameCameraZoom)
     scene.cameras.main.setDeadzone(100, 100)

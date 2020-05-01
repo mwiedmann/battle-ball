@@ -1,14 +1,15 @@
 import { state } from '.'
+import { gameState } from '../update'
 
 export const goalScoredUpdate = (scene: Phaser.Scene, time: number, delta: number, init: boolean) => {
   // See if celebration time is over
-  if (state.nextStateTransitionTime <= scene.time.now) {
-    state.ball?.startingPosition()
-    state.player1?.startingPosition(state.goalScoredByTeam === 'home')
-    state.player2?.startingPosition(state.goalScoredByTeam === 'away')
+  if (gameState.nextStateTransitionTime <= scene.time.now) {
+    state.ball.startingPosition()
+    state.player1.startingPosition(state.goalScoredByTeam === 'home')
+    state.player2.startingPosition(state.goalScoredByTeam === 'away')
 
-    state.gameState = 'faceOff'
-    state.nextStateTransitionTime = scene.time.now + 3000
+    gameState.phase = 'faceOff'
+    gameState.nextStateTransitionTime = scene.time.now + 3000
   }
 
   // Move the players back to their starting positions

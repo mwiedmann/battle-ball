@@ -45,7 +45,7 @@ export class Ball extends Phaser.Physics.Matter.Image {
 
   update() {
     // Restrieve the ball if not already holding it
-    if (controls.retrieveBall.isDown && !state.player1?.ball) {
+    if (controls.retrieveBall.isDown && !state.player1.ball) {
       this.shootAtTarget(state.player1!)
     }
     this.setAwake()
