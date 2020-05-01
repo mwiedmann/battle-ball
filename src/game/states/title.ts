@@ -50,13 +50,20 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, in
     const updateButtons = () => {
       ha.forEach((side) => {
         positions.forEach((p) => {
-          if (!settings[side][p].buttons) {
-            settings[side][p].buttons = {}
+          // Get the setting for this side and position (e.g. home wing)
+          const setting = settings[side][p]
+          if (!setting.buttons) {
+            // Create the buttons object (holds the buttons for each level at this position)
+            setting.buttons = {}
           }
           level.forEach((l) => {
-            const data = settings[side][p]
-            if (!settings[side][p].buttons![l]) {
-              settings[side][p].buttons![l] = scene.add
+            const data = setting
+            const button = setting.buttons && setting.buttons[l]
+            if (!button) {
+              // Create the button for this level at this position
+              // TS seems to be confused by my object hierarchy here,
+              // I've clearly checked the undef condition but it still complains.
+              setting.buttons![l] = scene.add
                 .circle(
                   (side === 'home' ? homeX : awayX) + levelXPosition[l],
                   data.yOffset,
@@ -69,7 +76,10 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, in
                   updateButtons()
                 })
             } else {
-              settings[side][p].buttons![l]!.fillColor = settings[side][p].level === l ? 0x0000ff : 0
+              if (!button) {
+                throw new Error(`Settings error. Button not defined for ${side} ${p} ${l}`)
+              }
+              button.fillColor = settings[side][p].level === l ? 0x0000ff : 0
             }
           })
         })
@@ -138,7 +148,7 @@ export const titleUpdate = (scene: Phaser.Scene, time: number, delta: number, in
     state.ball.setOnCollideWith([...state.homeTeam, ...state.awayTeam], (
       data: any /*Phaser.Types.Physics.Matter.MatterCollisionData */
     ) => {
-      data.gameObject.grabBall(state.ball!)
+      data.gameObject.grabBall(state.ballGet())
     })
 
     scene.cameras.main.setZoom(gameSettings.gameCameraZoom)

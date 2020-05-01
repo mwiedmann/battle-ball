@@ -1,6 +1,7 @@
 import { Ball } from '../game-objects/ball'
 import { Guy } from '../game-objects/guy'
 import { ITeam } from '../types'
+import { safeGet } from '../helpers/undef-check'
 
 export type IGameState = 'title' | 'faceOff' | 'game' | 'goalScored'
 
@@ -8,6 +9,8 @@ export interface IState {
   gameState: IGameState
   goalScoredByTeam?: ITeam
   ball?: Ball
+  ballGet: () => Ball
+
   homeTeam: Guy[]
   awayTeam: Guy[]
 
@@ -16,9 +19,11 @@ export interface IState {
 
   homeScore: number
   homeText?: Phaser.GameObjects.Text
+  homeTextGet: () => Phaser.GameObjects.Text
   homeScoreImage?: Phaser.GameObjects.Image
   awayScore: number
   awayText?: Phaser.GameObjects.Text
+  awayTextGet: () => Phaser.GameObjects.Text
   awayScoreImage?: Phaser.GameObjects.Image
 
   // This will be refactored to support more players but its fine for now
@@ -32,7 +37,11 @@ export interface IState {
   player2AI: boolean
 
   homeGoal?: Phaser.Physics.Matter.Image
+  homeGoalGet: () => Phaser.Physics.Matter.Image
+
   awayGoal?: Phaser.Physics.Matter.Image
+  awayGoalGet: () => Phaser.Physics.Matter.Image
+
   homeScoreArea?: MatterJS.BodyType
   awayScoreArea?: MatterJS.BodyType
 
@@ -72,4 +81,11 @@ export const state: IState = {
     guy.team === 'home' ? state.homeTeam.filter((g) => g !== guy) : state.awayTeam.filter((g) => g !== guy),
 
   allPlayers: () => [...state.homeTeam, ...state.awayTeam],
+
+  // Get helpers for objects that may be undefined
+  ballGet: () => safeGet(state.ball),
+  homeGoalGet: () => safeGet(state.homeGoal),
+  awayGoalGet: () => safeGet(state.awayGoal),
+  homeTextGet: () => safeGet(state.homeText),
+  awayTextGet: () => safeGet(state.awayText),
 }
